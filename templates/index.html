@@ -7,10 +7,6 @@
         <!-- 반응형으로 동작하게 합니다. -->
         <meta title="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        <!-- Bootstrap 을 포함합니다. -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
-
         <!-- jQuery 를 포함합니다. -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
@@ -67,13 +63,13 @@
             // 아래는 함수에 이름을 부여하지 않고 바로 ready(...) 의 매개변수로 함수를 전달하는 방식으로 로드 완료시 호출될 함수를 등록합니다.
             $(document).ready(function () {
                 // 영화 목록을 보여줍니다.
-                showMovie()
+                // showMovie()
 
-                // 현재 적용되고 있는 정렬 방식의 버튼에 눌려져 보이는 효과를 줍니다.
-                displaySorter()
+                // // 현재 적용되고 있는 정렬 방식의 버튼에 눌려져 보이는 효과를 줍니다.
+                // displaySorter()
 
-                // 휴지통 모드에 따라 메뉴를 다르게 바꿔줍니다.
-                displayTrashMode(trashMode)
+                // // 휴지통 모드에 따라 메뉴를 다르게 바꿔줍니다.
+                // displayTrashMode(trashMode)
             });
 
             function showMovie() {
@@ -256,6 +252,20 @@
         <!-- *주의* 아래 내용 중 id="movie-box" 은 삭제하면 안됩니다. -->
         <div class="movie-list" id="movie-box">
             <!-- javascript 가 이 사이에 HTML element 를 생성해서 삽입합니다. -->
+                <div class="card">
+                <img src="https://cataas.com/cat" class="movie-poster"/>
+                <span class="movie-title">${title}</span>
+                <span class="icon"><i class="fas fa-thumbs-up"></i></span><span class="movie-likes">${likes}</span>
+                누적관객수 <span class="movie-viewers">${viewers}</span> 명
+                개봉일 <span class="movie-date"></span>
+
+                <a href="#" onclick="likeMovie()">
+                위로!
+                </a>
+                <a href="#" onclick="trashMovie()">
+                휴지통으로
+                </a>
+                </div>
         </div>
     </body>
 </html>
