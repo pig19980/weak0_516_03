@@ -86,7 +86,7 @@
 
 
 
-        .card-image {
+        #align-center {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -115,14 +115,17 @@
         function goYesterdayBtn() {
             currentDate.setDate(currentDate.getDate() - 1);
             updateDateDisplay();
+
+            //DB에서 다시 불러오기
         }
 
         function goTomorrowBtn() {
             currentDate.setDate(currentDate.getDate() + 1);
             updateDateDisplay();
+            //DB에서 다시 불러오기
         }
 
-     
+
     </script>
 </head>
 
@@ -160,22 +163,32 @@
 
 
             <div class="mainfeed">
-                <div class="card">
-                    <div class="media" style="margin-bottom: 0px;">
-                        <p class="title is-4" style="margin-bottom: 0px;">김정글의 7월 1일</p>
-                        <span id="thumb-up" class="right-button"><button class="fa-solid fa-thumbs-up "></button>
-                            <span>0</span></span>
-                    </div>
-                    <hr style="margin-top: 0px;">
-                    <figure class="card-image is-square">
-                        <img src="https://bulma.io/assets/images/placeholders/480x480.png" alt="Placeholder image" />
-                    </figure>
-                    <div class="content">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus nec
-                        iaculis mauris.
-                    </div>
-                    <button class="button is-small is-primary is-rounded is-pulled-right">수정하기</button>
-                </div>
+                <ul>
+                    {% for user in user %}
+                    <li>
+                        <div class="card" style="margin-bottom: 70px;">
+                            <div class="media" style="margin-bottom: 0px;">
+                                <p class="title is-4" style="margin-bottom: 0px;">{{ user.year }}의
+                                    {{user.month}}월 {{user.day}}일</p>
+                                <span id="thumb-up" class="right-button"><button
+                                        class="fa-solid fa-thumbs-up "></button>
+                                    <span>0</span></span>
+                            </div>
+                            <hr style="margin-top: 0px;">
+                            <h1 id="align-center" class="title is-3">{{ user.title}}</h1>
+                            <figure id="align-center" class="card-image is-square">
+                                <img src="https://bulma.io/assets/images/placeholders/480x480.png"
+                                    alt="Placeholder image" />
+                            </figure>
+                            <div class="content">
+                                {{user.contents}}
+                            </div>
+                            <button class="button is-small is-primary is-rounded is-pulled-right">수정하기</button>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+
             </div>
 
         </div>
