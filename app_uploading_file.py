@@ -51,7 +51,7 @@ def post_article():
     return jsonify({"result": "success"})
 
 
-# post의 이미지를 불러올 때 fimg src="http://127.0.0.1:5000/img/{$figure_id}">
+# post의 이미지를 불러올 때 img src="http://127.0.0.1:5000/img/{$figure_id}">
 # 형식으로 하시면 됩니다.
 # 서버로 하는 경우는, 주소를 서버로.
 
@@ -63,8 +63,8 @@ def send_image(figure_id):
     # print(figure_id)
     try:
         file = fs.get(ObjectId(figure_id))
-        print("file found")
-        print(file)
+        # print("file found")
+        # print(file)
         return send_file(
             io.BytesIO(file.read()),
             mimetype=file.content_type,
