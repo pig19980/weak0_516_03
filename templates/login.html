@@ -36,15 +36,21 @@
         }
 
 
-        .box {
+        .loginform {
             width: 50%;
             margin: auto;
-
         }
 
-        .good {
-            width: 50%;
-            margin: 0 auto;
+        #textinput {
+            width: 300px;
+            height: 50px;
+            margin: 5px;
+        }
+
+
+        #submit {
+            margin: auto;
+            width: 100px;
         }
     </style>
 
@@ -53,41 +59,29 @@
 
 
     <script>
-        function postUser() {
-            let uid = $("#user_id").val();
-            let upw = $("#user_pw").val();
+        // function postUser() {
+        //     let uid = $("#regi_id").val();
+        //     let upw = $("#regi_pw").val();
 
-            // 2. memo에 POST 방식으로 메모 생성 요청하기
-            $.ajax({
-                type: "POST", // POST 방식으로 요청하겠다.
-                url: "/login/register",
-                data: { user_id: uid, user_pw: upw }, // 데이터를 주는 방법
-                success: function (response) { // 성공하면
-                    if (response["result"] == "success") {
-                        alert("포스팅 성공!");
-                        // 3. 성공 시 페이지 새로고침하기
-                        window.location.reload();
-                    } else {
-                        alert("서버 오류!")
-                    }
-                }
-            })
-        }
 
-        function register() {
-            // id 값 post-box의 display 값이 block 이면(= 눈에 보이면)
-            if ($("#post-box").css("display") == "block") {
-                // post-box를 가리고
-                $("#post-box").hide();
-                // 다시 버튼을 클릭하면, 박스 열기를 할 수 있게 텍스트 바꿔두기
-                $("#btn-post-box").text("포스팅 박스 열기");
-            } else {
-                // 아니면(눈에 보이지 않으면) post-box를 펴라
-                $("#post-box").show();
-                // 다시 버튼을 클릭하면, 박스 닫기를 할 수 있게 텍스트 바꿔두기
-                $("#btn-post-box").text("포스팅 박스 닫기");
-            }
-        }
+        //     // 2. memo에 POST 방식으로 메모 생성 요청하기
+        //     $.ajax({
+        //         type: "POST", // POST 방식으로 요청하겠다.
+        //         url: "/login/register",
+        //         data: { user_id: uid, user_pw: upw }, // 데이터를 주는 방법
+        //         success: function (response) { // 성공하면
+        //             if (response["result"] == "success") {
+        //                 alert("포스팅 성공!");
+        //                 // 3. 성공 시 페이지 새로고침하기
+        //                 window.location.reload();
+        //             } else {
+        //                 alert("서버 오류!")
+        //             }
+        //         }
+        //     })
+        // }
+
+
 
     </script>
 
@@ -102,46 +96,39 @@
 
 <body>
 
-    <form class="box">
-        <div class="field">
-            <label class="label">Email</label>
-            <div class="control">
-                <input class="input" type="email" placeholder="ex) alex@example.com" />
-            </div>
+
+
+
+    <form action="/login/logincheck" method="post">
+        <div class="loginform">
+            아이디 :<br />
+            <input class="input" name="user_id" type="text" placeholder="아이디를 입력하세요." /><br /><br />
+            비밀번호 : <br />
+            <input class="input" name="user_pw" type="password" placeholder="비밀번호를 입력하세요." /><br /><br /><br />
+            <div id="submit"><input id="submit" type="submit" value="로그인"></div>
         </div>
-
-        <div class="field">
-            <label class="label">Password</label>
-            <div class="control">
-                <input class="input" type="password" placeholder="********" />
-            </div>
-        </div>
-
-        <button class="button is-primary">Sign in</button>
-
-        <hr>
     </form>
 
-    <div class="good">
-        <button class="button is-text" onclick="register()">Register</button>
+    <hr>
+    <hr>
+    <hr>
+    <hr>
 
-        <div class="field">
-            <div id="post-box" class="form-post" style="display:none">
-                <div>
-                    <div class="form-group">
-                        <label for="post-url">ID</label>
-                        <input id="post-url" class="form-control" placeholder="">
-                    </div>
-                    <div class="form-group">
-                        <label for="post-comment">PW</label>
-                        <textarea id="post-comment" class="form-control" rows="2"></textarea>
-                    </div>
-                    <button type="button" class="btn btn-primary" onclick="postArticle()">회원가입</button>
-                </div>
-            </div>
+
+
+    <form action="/login/register" method="post">
+        <div class="loginform">
+            아이디 :<br />
+            <input class="input" name="regi_id" type="text" placeholder="아이디를 입력하세요." /><br /><br />
+            비밀번호 : <br />
+            <input class="input" name="regi_pw" type="password" placeholder="비밀번호를 입력하세요." /><br /><br />
+            비밀번호 확인 :<br />
+            <input class="input" name="regi_pw2" type="password" placeholder="비밀번호를 다시 입력하세요." /><br /><br /><br />
+            <div id="submit"><input id="submit" type="submit" value="회원가입"></div>
         </div>
+    </form>
 
-    </div>
+
 
 
 
