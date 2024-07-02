@@ -43,6 +43,10 @@ app.json = CustomJSONProvider(app)
 def home():
     return render_template("index.html")
 
+@app.route("/login")
+def login():
+    return render_template("login.html")
+
 
 @app.route('/login/register', methods=['POST'])
 def insert_user_data():
