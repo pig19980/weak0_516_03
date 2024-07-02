@@ -132,18 +132,6 @@ def logincheck():
 
 
 
-@app.route('/select')
-def select():
-    # MongoDB에서 데이터 모두 보기
-    all_users = list(db.users.find({}))
-
-    if all_users==None:
-        print("없다")
-    else:
-        print("있다")
-
-    return jsonify({'result': 'success',"user":all_users})
-
 
 @app.route('/index')
 def index():
