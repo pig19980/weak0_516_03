@@ -1,15 +1,22 @@
 from bson import ObjectId
 from pymongo import MongoClient
 
-from flask import Flask, render_template, jsonify, request, redirect,url_for
+from flask import Flask, render_template, jsonify, request, redirect,url_for, send_file
 from flask.json.provider import JSONProvider
+
+import gridfs
+import io
 
 import json
 import sys
 
 import jwt
 
+from jinja2 import Template
 
+#timestamp
+import datetime 
+from datetime import timedelta
 
 
 app = Flask(__name__)
@@ -20,7 +27,7 @@ SECRET_KEY = 'jungle_3' # 토큰을 암호화할 key 세팅
 # db connection
 client = MongoClient("localhost", 27017)
 db = client.dbjungle
-
+fs = gridfs.GridFS(db)
 
 
 
@@ -42,11 +49,49 @@ class CustomJSONProvider(JSONProvider):
         return json.loads(s, **kwargs)
 
 
+# 게시글 업로드
+
+# Card에 들어갈 콘텐츠 객체
+class todayFeedContent:
+    def __init__(self, u_name,figure_id, datetime, likes, title, imageID, learned, code):
+        self.userName = u_name
+        self.figure_id = figure_id
+        #datetime 자체로 넘겨줄수있으면 바꾸기!
+        self.year = datetime.year
+        self.month = datetime.month
+        self.day = datetime.day
+        self.time = datetime.time
+
+        self.likes = likes
+        self.title = title
+        self.imageID = imageID
+        self.learned = learned
+        self.code = code
+
+
+# DB에서 오늘 날짜의 CARD 불러오기
+todayCardDB = []
+
+now = datetime.datetime.now()
+minnow = now.strftime("%Y%m%d00000000")
+
+next_day = now + timedelta(days=1)
+
+maxnow = next_day.strftime("%Y%m%d00000000")
+
+#DB Search
+todayCardDB = list(db.posts.find({'created_at': {'$gte': minnow, '$lt': maxnow}}))
+
+
+#[todayFeedContent]객체 리스트 생성하기
+articledatas = []
+for data in todayCardDB:
+    dt = todayFeedContent(data["u_name"],data["figure_id"],datetime.datetime.strptime(data['created_at'], "%Y%m%d%H%M%S%f"), data["likes"], data["title"], data["figure_id"], data["learned"],data["code"])
+    articledatas.append(dt)
+
+
 # 위에 정의되 custom encoder 를 사용하게끔 설정한다.
 app.json = CustomJSONProvider(app)
-
-
-
 
 
 @app.route("/login")
@@ -140,13 +185,79 @@ def index():
     # print(f'token?:{token}')
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        return render_template('token.html',token= token,user_id=payload['user_id'],user_pw=payload['user_pw'])
+        return render_template('index.html',token= token,user_id=payload['user_id'],user_pw=payload['user_pw'], articledatas = articledatas )
    	# token이 만료 되었을때
-    except jwt.ExpriedSignatureError:
+    except jwt.ExpiredSignatureError:
         return '로그인이 만료되었습니다. 다시 로그인 해주세요'
     # token이 없을때
     except jwt.exceptions.DecodeError:
     	return '로그인 정보가 없습니다.'
+
+# 할 일: uid를 find하고 db에 잘 저장하기
+# like초기화
+@app.route("/writeArticle", methods=["POST"])
+def post_article():
+    # 1. 클라이언트로부터 데이터를 받기
+    title = request.form["title"]
+    learned = request.form["learned"]
+    code = request.form["code"]
+
+    if "figure" not in request.files:
+        print("no fig")
+        figure_id = None
+    else:
+        print("yes fig")
+        figure = request.files["figure"]
+        print(figure.filename)
+        figure_id = fs.put(
+            figure.read(), filename=figure.filename, content_type=figure.content_type
+        )
+
+    print(title, learned, code, figure_id)
+
+    post = {
+        "figure_id": figure_id,
+        "u_name" : db.users.find_one({'user_id': request.form["user_id"]})['user_name'],
+        "user_id" : request.form["user_id"],
+        "title": title,
+        "likes": 0,
+        "learned": learned,
+        "code": code,
+        "created_at": datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+    }
+
+    print(post)
+    # 3. mongoDB에 데이터를 넣기
+    db.posts.insert_one(post)
+
+    return jsonify({"result": "success"})
+
+
+
+# post의 이미지를 불러올 때 img src="http://127.0.0.1:5000/img/{$figure_id}">
+# 형식으로 하시면 됩니다.
+# 서버로 하는 경우는, 주소를 서버로.
+
+
+@app.route("/img/<figure_id>")
+def send_image(figure_id):
+    # row = db.posts.find(ObjectId("6683ab97caca1a79eaba33ba"))
+    # print(row)
+    # print(figure_id)
+    try:
+        file = fs.get(ObjectId(figure_id))
+        # print("file found")
+        # print(file)
+        return send_file(
+            io.BytesIO(file.read()),
+            mimetype=file.content_type,
+            as_attachment=True,
+            download_name=file.filename,
+        )
+    except gridfs.NoFile:
+        return jsonify({"error": "File not found"}), 404
+
+
 
 
 
