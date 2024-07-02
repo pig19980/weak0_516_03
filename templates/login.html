@@ -27,7 +27,7 @@
 
 
     <style>
-        /* class : .   id : #  일반 태그는 아무것도 없이 */
+        /* class : .   id : #  일반 태그는 아무것도 없이   form 은 id 로 하기*/
         hr {
             border: 2px solid #ccc;
             margin: 50px auto;
@@ -35,18 +35,17 @@
             width: 50%;
         }
 
-
         .loginform {
             width: 50%;
             margin: auto;
+            margin-top: 4%;
         }
 
-        #textinput {
-            width: 300px;
-            height: 50px;
-            margin: 5px;
+        .align-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-
 
         #submit {
             margin: auto;
@@ -56,34 +55,26 @@
 
 
 
-
-
     <script>
-        // function postUser() {
-        //     let uid = $("#regi_id").val();
-        //     let upw = $("#regi_pw").val();
-
-
-        //     // 2. memo에 POST 방식으로 메모 생성 요청하기
-        //     $.ajax({
-        //         type: "POST", // POST 방식으로 요청하겠다.
-        //         url: "/login/register",
-        //         data: { user_id: uid, user_pw: upw }, // 데이터를 주는 방법
-        //         success: function (response) { // 성공하면
-        //             if (response["result"] == "success") {
-        //                 alert("포스팅 성공!");
-        //                 // 3. 성공 시 페이지 새로고침하기
-        //                 window.location.reload();
-        //             } else {
-        //                 alert("서버 오류!")
-        //             }
-        //         }
-        //     })
-        // }
+        function openClose() {
+            if ($("#status").css("display") == "block") {
+                $("#status").hide();
+            } else {
+                $("#status").show();
+            }
+        }
 
 
 
+        // 페이지가 로드될 때 alert를 표시하는 함수
+        window.onload = function () {
+            const message = "{{ message }}";
+            if (message) {
+                alert(message);
+            }
+        };
     </script>
+
 
 
 </head>
@@ -97,39 +88,38 @@
 <body>
 
 
+    <div class="container">
+        <div class="notification has-text-primary-50" style="width: 65%; margin: auto;">
+
+            <div class="loginform" id="loginform">
+                <form action="/login/logincheck" method="post">
+                    아이디 :<br />
+                    <input class="input" name="user_id" type="text" placeholder="아이디를 입력하세요." /><br /><br />
+                    비밀번호 : <br />
+                    <input class="input" name="user_pw" type="password" placeholder="비밀번호를 입력하세요." /><br /><br /><br />
+                    <div id="submit"><input id="submit" type="submit" value="로그인"></div>
+                </form>
+            </div>
+
+            <hr>
+            <button class="button is-text loginform align-center" onclick="openClose()">계정 만들고 시작하기</button><br />
 
 
-    <form action="/login/logincheck" method="post">
-        <div class="loginform">
-            아이디 :<br />
-            <input class="input" name="user_id" type="text" placeholder="아이디를 입력하세요." /><br /><br />
-            비밀번호 : <br />
-            <input class="input" name="user_pw" type="password" placeholder="비밀번호를 입력하세요." /><br /><br /><br />
-            <div id="submit"><input id="submit" type="submit" value="로그인"></div>
+
+
+            <div id="status" style="display:none">
+                <form action="/login/register" method="post" class="loginform">
+                    <input class="input" name="regi_id" type="text" placeholder="아이디를 입력하세요." /><br /><br />
+                    <input class="input" name="regi_pw" type="password" placeholder="비밀번호를 입력하세요." /><br /><br />
+                    <input class="input" name="regi_pw2" type="password" placeholder="비밀번호를 다시 입력하세요." /><br /><br />
+                    <input class="input" name="regi_name" type="text" placeholder="이름을 입력하세요." /><br /><br /><br />
+                    <div id="submit"><input id="submit" type="submit" value="회원가입"></div>
+                </form>
+            </div>
+
+
         </div>
-    </form>
-
-    <hr>
-    <hr>
-    <hr>
-    <hr>
-
-
-
-    <form action="/login/register" method="post">
-        <div class="loginform">
-            아이디 :<br />
-            <input class="input" name="regi_id" type="text" placeholder="아이디를 입력하세요." /><br /><br />
-            비밀번호 : <br />
-            <input class="input" name="regi_pw" type="password" placeholder="비밀번호를 입력하세요." /><br /><br />
-            비밀번호 확인 :<br />
-            <input class="input" name="regi_pw2" type="password" placeholder="비밀번호를 다시 입력하세요." /><br /><br /><br />
-            <div id="submit"><input id="submit" type="submit" value="회원가입"></div>
-        </div>
-    </form>
-
-
-
+    </div>
 
 
 </body>

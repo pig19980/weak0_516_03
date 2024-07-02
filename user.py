@@ -8,7 +8,7 @@ import json
 import sys
 
 import jwt
-import hashlib
+
 
 
 
@@ -16,8 +16,14 @@ app = Flask(__name__)
 
 SECRET_KEY = 'jungle_3' # 토큰을 암호화할 key 세팅
 
+
+# db connection
 client = MongoClient("localhost", 27017)
 db = client.dbjungle
+
+
+
+
 
 
 
@@ -43,10 +49,14 @@ app.json = CustomJSONProvider(app)
 
 
 
-@app.route("/")
+@app.route("/login")
 def login():
-    return render_template("login.html")
-
+    message = request.args.get('message')
+    if message is None:
+        return render_template("login.html")
+    else:
+        return render_template("login.html", message=message)
+    
 
 
 
@@ -57,20 +67,28 @@ def insert_user_data():
     uid_receive = request.form['regi_id']  # 클라이언트로부터 user_id을 받는 부분
     upw_receive = request.form['regi_pw']  # 클라이언트로부터 user_pw을 받는 부분
     upw2_receive = request.form['regi_pw2']  # 클라이언트로부터 user_pw을 받는 부분
+    uname_receive = request.form['regi_name']  # 클라이언트로부터 user_pw을 받는 부분
 
-    if upw_receive== upw2_receive:
-        print("비번일치")
+    if db.users.find_one({'user_id':uid_receive}) is None:
+        # 중복아이디가 없으면 실행되는 이중 조건
+        if upw_receive == upw2_receive:
+            print("비번일치")
 
-        user_data = {
-        'uid' : uid_receive,
-        'upw' : upw_receive,
-        }
-          
-        db.users.insert_one(user_data)
+            user_data = {
+            'user_id' : uid_receive,
+            'user_pw' : upw_receive,
+            'user_name' : uname_receive
+            }
+
+            db.users.insert_one(user_data)
+            response = redirect(url_for('login'))
+            return response
+        else:
+            print("비번 불일치")
+            return render_template("login.html", message="비밀번호가 일치하지 않습니다. 다시 시도해주세요.")
     else:
-        print("비번 불일치")
+        return render_template("login.html", message="중복된 아이디 입니다.")
 
-    return jsonify({'result': 'success'})
 
 
 # 유저 로그인 체크 
@@ -81,12 +99,12 @@ def logincheck():
     upw_receive = request.form['user_pw']  # 클라이언트로부터 user_pw을 받는 부분
 
     user_data = {
-        'uid' : uid_receive,
-        'upw' : upw_receive,
+        'user_id' : uid_receive,
+        'user_pw' : upw_receive,
     }
 
 
-    check = db.users.find_one({'uid':user_data['uid'],'upw':user_data['upw']})
+    check = db.users.find_one({'user_id':user_data['user_id'],'user_pw':user_data['user_pw']})
 
     if check is None:
         # 로그인 실패
@@ -98,9 +116,8 @@ def logincheck():
         print("로그인 성공")
         # 사용자 정보를 json 형태로 만든다.
         payload = {
-            'id': user_data['uid'],
-            'pw': user_data['upw'],
-
+            'user_id': user_data['user_id'],
+            'user_pw': user_data['user_pw'],
         }
         # 토큰을 발급한다.
         token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
@@ -112,8 +129,6 @@ def logincheck():
         return response
 
 
-        # return render_template("token.html",token=token)
-        # return jsonify({'result': 'success', 'token': token})
 
 
 
@@ -137,7 +152,7 @@ def index():
     # print(f'token?:{token}')
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        return render_template('token.html',token= token,user_id=payload['id'],user_pw=payload['pw'])
+        return render_template('token.html',token= token,user_id=payload['user_id'],user_pw=payload['user_pw'])
    	# token이 만료 되었을때
     except jwt.ExpriedSignatureError:
         return '로그인이 만료되었습니다. 다시 로그인 해주세요'
