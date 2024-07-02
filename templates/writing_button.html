@@ -1,0 +1,163 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+	<title>Bulma Modal Card</title> 
+	<link rel="stylesheet" href= "https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"/> 
+	<script defer src="https://use.fontawesome.com/releases/v6.4.0/js/all.js"></script>
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+    crossorigin="anonymous"></script>
+
+
+	<style>
+		.delete {
+			position: absolute;
+			top: 2px;
+			right: 2px;
+		}
+	</style>
+
+	<script>
+		function cancleUpload() {
+			const fileName = $("#file-js-upload .file-name");
+			const newImg = $("#modal-js-writing > div.modal-card > section > figure");
+			const fileInput = document.querySelector("#file-js-upload input[type=file]");
+
+			console.log(fileInput.files[0]);
+			// fileInput.files = null;
+			console.log(fileInput)
+			fileInput.val('')
+			// console.log(fileInput.files);
+			// console.log(fileInput.files[0]);
+			console.log(fileInput)
+			fileName.text("사진이 선택되지 않았습니다.");
+			
+			newImg.find("img").attr("src", "../static/github.jpg");
+			newImg.find("button").remove();
+		}
+	</script>
+</head> 
+<body class="has-text-centered content"> 
+	<h1 class="title has-text-success">GeeksforGeeks</h1> 
+	
+	<div class="modal" id="modal-js-writing">
+		<div class="modal-background"></div>
+		<div class="modal-card">
+		<header class="modal-card-head">
+			<p class="modal-card-title">{%User_name}의 {%Date}</p>
+			<button class="delete" aria-label="close"></button>
+		</header>
+		<section class="modal-card-body">
+
+
+		<figure class="image is-128x128">
+			<img src="..\static\github.jpg" />
+		</figure>
+		
+			
+		<div id="file-js-upload" class="file has-name">
+			<label class="file-label">
+			<input class="file-input" type="file" accept="image/*" name="resume" />
+			<span class="file-cta">
+				<span class="file-icon">
+				<i class="fas fa-upload"></i>
+				</span>
+				<span class="file-label"> Upload </span>
+			</span>
+			<span class="file-name"> 사진이 선택되지 않았습니다. </span>
+			</label>
+		</div>
+			
+		<textarea class="textarea" placeholder="여기에 입력해주세요."></textarea>
+			
+		</section>
+		<footer class="modal-card-foot">
+			<div class="buttons">
+			<button class="button is-success">Save changes</button>
+			<button class="button">Cancel</button>
+			</div>
+		</footer>
+		</div>
+	</div>
+
+	<button class="js-modal-trigger button is-primary" data-target="modal-js-writing">
+		Open JS example modal
+	</button>
+
+
+
+
+	<script> 
+		// modal part
+		document.addEventListener('DOMContentLoaded', () => {
+		// Functions to open and close a modal
+		function openModal($el) {
+			$el.classList.add('is-active');
+		}
+
+		function closeModal($el) {
+			$el.classList.remove('is-active');
+		}
+
+		function closeAllModals() {
+			(document.querySelectorAll('.modal') || []).forEach(($modal) => {
+			closeModal($modal);
+			});
+		}
+
+		// Add a click event on buttons to open a specific modal
+		(document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
+			const modal = $trigger.dataset.target;
+			const $target = document.getElementById(modal);
+
+			$trigger.addEventListener('click', () => {
+			openModal($target);
+			});
+		});
+
+		// Add a click event on various child elements to close the parent modal
+		(document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach(($close) => {
+			const $target = $close.closest('.modal');
+
+			$close.addEventListener('click', () => {
+			closeModal($target);
+			});
+		});
+
+		// Add a keyboard event to close all modals
+		document.addEventListener('keydown', (event) => {
+			if(event.key === "Escape") {
+			closeAllModals();
+			}
+		});
+		});
+
+
+
+	// image upload part
+	const fileInput = document.querySelector("#file-js-upload input[type=file]");
+	console.log(fileInput.files);
+	fileInput.onchange = () => {
+		if (fileInput.files.length > 0) {
+			const file = fileInput.files[0];
+			const fileName = $("#file-js-upload .file-name");
+			const newImg = $("#modal-js-writing > div.modal-card > section > figure");
+			fileName.text(file.name);
+			
+			newImg.find("img").attr("src", URL.createObjectURL(file));
+
+			newImg.append(
+				`<button class="delete" aria-label="close" onclick="cancleUpload()"></button>`
+			)
+			// const newCloseButton = document.createElement("button");
+			// newCloseButton.classList.add("delete");
+			// newCloseButton.setAttribute("aria-label", "close");
+			// newImg.appendChild(newCloseButton);
+			
+		}
+	};
+
+	
+	</script> 
+</body> 
+</html> 
