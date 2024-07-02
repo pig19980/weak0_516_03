@@ -22,6 +22,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/mode/javascript/javascript.min.js"></script>
 
+    <!-- Prism.js CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css" rel="stylesheet" />
+
+
     <title>오늘 하루 어땟니? | 정글에서의 하루 공유하기</title>
 
     <!-- 이 HTML 안에서 사용할 CSS 를 정의합니다. -->
@@ -102,11 +106,31 @@
             height: auto;
         }
 
-		.delete {
-			position: absolute;
-			top: 2px;
-			right: 2px;
-		}
+        .delete {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+        }
+
+
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .CodeMirror {
+            border: 1px solid #ccc;
+            height: auto;
+        }
+
+        pre {
+            padding: 20px;
+            background: #2d2d2d;
+            color: white;
+            border-radius: 5px;
+            overflow: auto;
+        }
     </style>
 
     <script>
@@ -137,60 +161,60 @@
         }
 
 
-		function cancleUpload() {
-			const fileName = $("#file-js-upload .file-name");
-			const newImg = $("#modal-js-writing > div.modal-card > section > figure");
-			const fileInput = $("#file-js-upload input[type=file]");
+        function cancleUpload() {
+            const fileName = $("#file-js-upload .file-name");
+            const newImg = $("#modal-js-writing > div.modal-card > section > figure");
+            const fileInput = $("#file-js-upload input[type=file]");
 
-			fileInput.val('')
-			fileName.text("사진이 선택되지 않았습니다.");
-			
-			newImg.find("img").attr("src", "{{ url_for('static', filename='insert_photo.webp') }}").attr("id", "insert-photo");
-			newImg.find("button").remove();
-		}
+            fileInput.val('')
+            fileName.text("사진이 선택되지 않았습니다.");
 
-		function UploadArticle() {
-			const fileInput = $("#file-js-upload input[type=file]");
+            newImg.find("img").attr("src", "{{ url_for('static', filename='insert_photo.webp') }}").attr("id", "insert-photo");
+            newImg.find("button").remove();
+        }
 
-			var formData = new FormData();
-			let files = fileInput[0].files;
-			if (files.length > 0) {
-				console.log("figure appended");
-				formData.append("figure", files[0]);
-			}
+        function UploadArticle() {
+            const fileInput = $("#file-js-upload input[type=file]");
 
-			if ($("#upload-title").val() == '' || $("#upload-learned").val() == '') {
-				alert("제목이나 내용이 없습니다.");
-				return;
-			}
+            var formData = new FormData();
+            let files = fileInput[0].files;
+            if (files.length > 0) {
+                console.log("figure appended");
+                formData.append("figure", files[0]);
+            }
 
-			formData.append("title", $("#upload-title").val());
-			formData.append("learned", $("#upload-learned").val());
-			formData.append("code", editor.getValue());
+            if ($("#upload-title").val() == '' || $("#upload-learned").val() == '') {
+                alert("제목이나 내용이 없습니다.");
+                return;
+            }
+
+            formData.append("title", $("#upload-title").val());
+            formData.append("learned", $("#upload-learned").val());
+            formData.append("code", editor.getValue());
             formData.append("user_id", "{{user_id}}")
             console.log("{{user_id}}")
-			// for (let key of formData.keys()) {
-			// 	console.log(key);
-			// }
-			// for (let value of formData.values()) {
-			// 	console.log(value);
-			// }
-			$.ajax({
-				type : 'POST',
-				url: '/writeArticle',
-				data : formData,
-				processData : false,
-				contentType : false,
-				success : function(result){
-					alert("Uploaded");
-					window.location.reload();
-				}
-			})
+            // for (let key of formData.keys()) {
+            // 	console.log(key);
+            // }
+            // for (let value of formData.values()) {
+            // 	console.log(value);
+            // }
+            $.ajax({
+                type: 'POST',
+                url: '/writeArticle',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (result) {
+                    alert("Uploaded");
+                    window.location.reload();
+                }
+            })
 
 
 
-			// window.location.reload();
-		}
+            // window.location.reload();
+        }
 
     </script>
 </head>
@@ -246,6 +270,7 @@
             </footer>
         </div>
     </div>
+
     <div class="columns">
         <!-- title -->
         <div id="title-group" class="column has-background-grey-light">
@@ -269,8 +294,6 @@
             <div class="buttongroup" style="margin-bottom: 50px; margin-top: 10px;">
                 <button class="button is-small is-link is-rounded">최신순</button>
                 <button class="button is-small is-primary is-rounded">인기순</button>
-                <!--<button id="add-post-button" class="right-button fa-solid fa-circle-plus js-modal-trigger"
-                    data-target="modal-js-writing"></button>-->
                 <button class="js-modal-trigger button is-white" data-target="modal-js-writing">
                     <i class="fa-solid fa-circle-plus"></i>
                 </button>
@@ -292,14 +315,22 @@
                             <hr style="margin-top: 0px;">
                             <h1 id="align-center" class="title is-3">{{ articledata.title}}</h1>
                             <figure id="align-center" class="card-image is-square">
-                                <img src="http://127.0.0.1:5001/img/{{ articledata.figure_id }}" alt="Placeholder image"></img>
+                                <img src="http://127.0.0.1:5001/img/{{ articledata.figure_id }}"
+                                    alt="Placeholder image"></img>
                             </figure>
                             <div class="learned">
                                 {{articledata.learned}}
                             </div>
-                            <div class="code">
-                                {{articledata.code}}
-                            </div>
+
+                            <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css"
+                                rel="stylesheet" />
+                            <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+
+                            <pre><code class="code">
+                            {{articledata.code}}
+                            </code></pre>
+                            <pre><code class="language-javascript">{{ articledata.code }}</code></pre>
+
                             <button class="button is-small is-primary is-rounded is-pulled-right">수정하기</button>
                         </div>
                     </li>
@@ -317,6 +348,26 @@
 
     </div>
 
+    <!-- Prism.js JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-javascript.min.js"></script>
+    <!-- js-beautify JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.0/beautify.min.js"></script>
+
+    <!-- Script to format and highlight code -->
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelectorAll('pre code').forEach((block) => {
+                // Get the code
+                var code = block.textContent.trim();
+                // Format the code using js-beautify
+                var formattedCode = js_beautify(code);
+                // Highlight the formatted code using Prism.js
+                block.innerHTML = Prism.highlight(formattedCode, Prism.languages.javascript, 'javascript');
+            });
+        });
+    </script>
+    
     <script>
         // code editor part
         var editor = CodeMirror.fromTextArea(document.getElementById("upload-code"), {
@@ -395,7 +446,6 @@
 
 
     </script>
-
 </body>
 
 </html>
