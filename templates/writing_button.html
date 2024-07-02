@@ -16,6 +16,26 @@
 			right: 2px;
 		}
 	</style>
+
+	<script>
+		function cancleUpload() {
+			const fileName = $("#file-js-upload .file-name");
+			const newImg = $("#modal-js-writing > div.modal-card > section > figure");
+			const fileInput = document.querySelector("#file-js-upload input[type=file]");
+
+			console.log(fileInput.files[0]);
+			// fileInput.files = null;
+			console.log(fileInput)
+			fileInput.val('')
+			// console.log(fileInput.files);
+			// console.log(fileInput.files[0]);
+			console.log(fileInput)
+			fileName.text("사진이 선택되지 않았습니다.");
+			
+			newImg.find("img").attr("src", "../static/github.jpg");
+			newImg.find("button").remove();
+		}
+	</script>
 </head> 
 <body class="has-text-centered content"> 
 	<h1 class="title has-text-success">GeeksforGeeks</h1> 
@@ -116,20 +136,18 @@
 
 	// image upload part
 	const fileInput = document.querySelector("#file-js-upload input[type=file]");
+	console.log(fileInput.files);
 	fileInput.onchange = () => {
 		if (fileInput.files.length > 0) {
 			const file = fileInput.files[0];
 			const fileName = $("#file-js-upload .file-name");
 			const newImg = $("#modal-js-writing > div.modal-card > section > figure");
 			fileName.text(file.name);
-			console.log(file.name);
-			console.log(newImg.find("img"));
-			console.log(URL.createObjectURL(file));
 			
 			newImg.find("img").attr("src", URL.createObjectURL(file));
 
 			newImg.append(
-				`<button class="delete" aria-label="close"></button>`
+				`<button class="delete" aria-label="close" onclick="cancleUpload()"></button>`
 			)
 			// const newCloseButton = document.createElement("button");
 			// newCloseButton.classList.add("delete");
