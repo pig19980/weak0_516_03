@@ -5,7 +5,6 @@
 .venv/Lib/site-packages/requests/__pycache__/status_codes.cpython-312.pyc
 .venv/Lib/site-packages/requests/__pycache__/structures.cpython-312.pyc
 *.pyc
-*.py
 *.ps1
 *.bat
 *.exe
