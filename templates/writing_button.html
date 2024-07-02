@@ -2,12 +2,21 @@
 <html> 
 <head> 
 	<title>Bulma Modal Card</title> 
-	<link rel="stylesheet" href= "https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"/> 
-	<script defer src="https://use.fontawesome.com/releases/v6.4.0/js/all.js"></script>
+	<!-- jquery와 ajax -->
 	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
     integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
     crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+	<!-- bluma 관련 css -->
+	<link rel="stylesheet" href= "https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"/> 
+	<script defer src="https://use.fontawesome.com/releases/v6.4.0/js/all.js"></script>
+
+	<!-- codemirror 관련 css -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/mode/javascript/javascript.min.js"></script>
+
 
 
 	<style>
@@ -27,7 +36,7 @@
 			fileInput.val('')
 			fileName.text("사진이 선택되지 않았습니다.");
 			
-			newImg.find("img").attr("src", "../static/github.jpg");
+			newImg.find("img").attr("src", "{{ url_for('static', filename='insert_photo.webp') }}").attr("id", "insert-photo");
 			newImg.find("button").remove();
 		}
 
@@ -48,7 +57,7 @@
 
 			formData.append("title", $("#upload-title").val());
 			formData.append("learned", $("#upload-learned").val());
-			formData.append("code", $("#upload-code").val());
+			formData.append("code", editor.getValue());
 			// for (let key of formData.keys()) {
 			// 	console.log(key);
 			// }
@@ -75,7 +84,7 @@
 
 	</script>
 </head> 
-<body class="has-text-centered content"> 
+<body class="content"> 
 	<h1 class="title has-text-success">GeeksforGeeks</h1> 
 	
 	<div class="modal" id="modal-js-writing">
@@ -93,8 +102,8 @@
 		<section class="modal-card-body">
 
 
-		<figure class="image is-128x128">
-			<img src="..\static\github.jpg" />
+		<figure class="image">
+			<img src="{{ url_for('static', filename='insert_photo.webp') }}" id="insert-photo"/>
 		</figure>
 		
 			
@@ -115,7 +124,9 @@
 			
 		<textarea class="textarea" id="upload-learned" placeholder="오늘 만난 문제를 입력해주세요."></textarea>
 		<br>
-		<textarea class="textarea" id="upload-code" placeholder="설명에 필요한 코드를 입력해주세요."></textarea>
+		<span>필요한 경우 코드를 입력해주세요. 버그 때문에 10줄 이상 쓰면 원상복구 됩니다.</span>
+		<br>
+		<textarea class="textarea" id="upload-code" name="code"></textarea>
 			
 		</section>
 		<footer class="modal-card-foot">
@@ -132,11 +143,19 @@
 	</button>
 
 
-	<img src="http://127.0.0.1:5000/img/6683ab97caca1a79eaba33b7"></img>
+	<!-- <img src="http://127.0.0.1:5000/img/6683ddadc4a55705aeb8f6c0" alt="notimg"></img> -->
 
 
 
 	<script> 
+		// code editor part
+		var editor = CodeMirror.fromTextArea(document.getElementById("upload-code"), {
+				lineNumbers: true,
+				mode: "javascript"
+			});
+
+
+
 		// modal part
 		document.addEventListener('DOMContentLoaded', () => {
 		// Functions to open and close a modal
@@ -181,8 +200,6 @@
 		});
 		});
 
-
-
 	// image upload part
 	const fileInput = document.querySelector("#file-js-upload input[type=file]");
 	console.log(fileInput.files);
@@ -193,7 +210,7 @@
 			const newImg = $("#modal-js-writing > div.modal-card > section > figure");
 			fileName.text(file.name);
 			
-			newImg.find("img").attr("src", URL.createObjectURL(file));
+			newImg.find("img").attr("src", URL.createObjectURL(file)).attr("id", "before-uploading");
 
 			newImg.append(
 				`<button class="delete" aria-label="close" onclick="cancleUpload()"></button>`
@@ -206,7 +223,7 @@
 		}
 	};
 
-	
+
 	</script> 
 </body> 
 </html> 
