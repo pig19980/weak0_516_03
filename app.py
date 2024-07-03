@@ -73,7 +73,7 @@ def updateFeedContents():
     next_day = now + timedelta(days=1)
 
     maxnow = next_day.strftime("%Y%m%d00000000")
-
+ 
     #DB Search
     todayCardDB = list(db.posts.find({'created_at': {'$gte': minnow, '$lt': maxnow}}))
 
