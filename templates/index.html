@@ -448,7 +448,8 @@
                             <hr style="margin-top: 0px;">
                             <h1 id="align-center" class="title is-3">{{ articledata.title}}</h1>
                             <figure id="align-center" class="card-image is-square">
-                                <img src="http://127.0.0.1:5001/img/{{ articledata.figure_id }}" alt="Placeholder image"
+                                {% set url = "" ~ articledata['figure_id'] ~ "" %}
+                                <img src="{{ url_for('send_image', figure_id = url) }}" alt="Placeholder image"
                                     id="post-img-{{ articledata.post_id }}"></img>
                             </figure>
                             <div class="learned">{{articledata.learned}}</div>
@@ -484,9 +485,9 @@
                                     <button class="delete" aria-label="close"></button>
                                 </header>
                                 <section class="modal-card-body">
-
                                     <figure class="image">
-                                        <img src="http://127.0.0.1:5001/img/{{ articledata.figure_id }}"
+                                        {% set url = "" ~ articledata['figure_id'] ~ "" %}
+                                        <img src="{{ url_for('send_image', figure_id = url) }}"
                                             id="modify-img-{{ articledata.post_id }}" />
                                     </figure>
                                     <div id="file-js-modify-{{ articledata.post_id }}" class="file has-name">
