@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <!-- 다양한 언어를 사용할 수 있도록 UTF-8 을 사용하도록 합니다. -->
+    <meta charset="UTF-8" />
+
+    <!-- 반응형으로 동작하게 합니다. -->
+    <meta title="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- jQuery 를 포함합니다. -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- CSS library 인 Bulma 를 포함합니다. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css" />
+
+    <!-- 텍스트형태로 되어있는 icon 을 쓸 수 있도록 Font awesome 을 포함하빈다. -->
+    <script defer src="https://use.fontawesome.com/releases/v6.4.0/js/all.js"></script>
+
+    <!-- codemirror 관련 css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/mode/javascript/javascript.min.js"></script>
+
+    <!-- Prism.js CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css" rel="stylesheet" />
+
+
+    <title>오늘 하루 어땟니? | 정글에서의 하루 공유하기</title>
+
+    <!-- 이 HTML 안에서 사용할 CSS 를 정의합니다. -->
+    <!-- . 으로 시작하는 단어는 CSS clas 에 해당하며 . 을 제외한 이름을 HTML tag 에서 class="..." 형태로 사용합니다. -->
+    <!-- 예: <div class="center"> -->
+    <style>
+        hr {
+            background-color: pink;
+        }
+
+        .h1 {
+            align-items: center;
+        }
+
+        #title-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* 수평 중앙 정렬 */
+
+            margin-top: 10px;
+        }
+
+
+        .date-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* 아이콘과 텍스트 수평 중앙 정렬 */
+            gap: 10px;
+            /* 아이템 사이의 간격 조절 (원하는 대로 조정 가능) */
+        }
+
+        .date-group .icon {
+            display: flex;
+            align-items: center;
+            /* 아이콘을 중앙에 정렬 */
+        }
+
+
+        .buttongroup {
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+        }
+
+        #add-post-button {
+            font-size: 24px;
+            /* 아이콘 크기 조정 */
+            width: 50px;
+            /* 버튼 너비 조정 */
+            height: 50px;
+            /* 버튼 높이 조정 */
+            color: #6496FF;
+        }
+
+
+        .right-button {
+            margin-left: auto;
+            /* 오른쪽으로 정렬 */
+        }
+
+        #thumb-up {
+            font-size: 24px;
+            color: #CD3861;
+        }
+
+
+
+        #align-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-image img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .delete {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+        }
+
+
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .CodeMirror {
+            border: 1px solid #ccc;
+            height: auto;
+        }
+
+        pre {
+            padding: 20px;
+            background: #2d2d2d;
+            color: white;
+            border-radius: 5px;
+            overflow: auto;
+        }
+    </style>
+
+    <script>
+        // 페이지 로드 시 현재 날짜 표시
+        window.onload = function () {
+            updateDateDisplay();
+        };
+
+        const daysOfWeek = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+        let currentDate = new Date();
+
+        function updateDateDisplay() {
+            const dayName = daysOfWeek[currentDate.getDay()];
+            document.getElementById("current_date").innerHTML = `${dayName}, ${currentDate.toLocaleDateString()}`;
+        }
+
+        function goYesterdayBtn() {
+            currentDate.setDate(currentDate.getDate() - 1);
+            updateDateDisplay();
+
+            //DB에서 다시 불러오기
+        }
+
+        function goTomorrowBtn() {
+            currentDate.setDate(currentDate.getDate() + 1);
+            updateDateDisplay();
+            //DB에서 다시 불러오기
+        }
+
+
+        function cancleUpload() {
+            const fileName = $("#file-js-upload .file-name");
+            const newImg = $("#modal-js-writing > div.modal-card > section > figure");
+            const fileInput = $("#file-js-upload input[type=file]");
+
+            fileInput.val('')
+            fileName.text("사진이 선택되지 않았습니다.");
+
+            newImg.find("img").attr("src", "{{ url_for('static', filename='insert_photo.webp') }}").attr("id", "insert-photo");
+            newImg.find("button").remove();
+        }
+
+        function UploadArticle() {
+            const fileInput = $("#file-js-upload input[type=file]");
+
+            var formData = new FormData();
+            let files = fileInput[0].files;
+            if (files.length > 0) {
+                console.log("figure appended");
+                formData.append("figure", files[0]);
+            }
+
+            if ($("#upload-title").val() == '' || $("#upload-learned").val() == '') {
+                alert("제목이나 내용이 없습니다.");
+                return;
+            }
+
+            formData.append("title", $("#upload-title").val());
+            formData.append("learned", $("#upload-learned").val());
+            formData.append("code", editor.getValue());
+            formData.append("user_id", "{{user_id}}")
+            console.log("{{user_id}}")
+            // for (let key of formData.keys()) {
+            // 	console.log(key);
+            // }
+            // for (let value of formData.values()) {
+            // 	console.log(value);
+            // }
+            $.ajax({
+                type: 'POST',
+                url: '/writeArticle',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (result) {
+                    alert("Uploaded");
+                    window.location.reload();
+                }
+            })
+
+
+
+            // window.location.reload();
+        }
+
+    </script>
+</head>
+
+<!-- HTML 본문에 해당합니다. -->
+<!-- HTML 태그를 이용해서 layout 을 대략적으로 잡아두고, -->
+<!-- 위에 정의된 JavaScript 를 통해 동적으로 데이터를 조작해 최종 HTML 이 만들어집니다. -->
+
+<body>
+    <!-- layout -->
+    <div class="modal" id="modal-js-writing">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <input class="input is-large" type="text" id="upload-title" placeholder="제목을 입력하세요." />
+                <button class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body">
+
+
+                <figure class="image">
+                    <img src="{{ url_for('static', filename='insert_photo.webp') }}" id="insert-photo" />
+                </figure>
+
+
+                <div id="file-js-upload" class="file has-name">
+                    <label class="file-label">
+                        <input class="file-input" type="file" accept="image/*" name="resume" />
+                        <span class="file-cta">
+                            <span class="file-icon">
+                                <i class="fas fa-upload"></i>
+                            </span>
+                            <span class="file-label"> Upload </span>
+                        </span>
+                        <br>
+                        <br>
+                        <span class="file-name"> 사진이 선택되지 않았습니다. </span>
+                    </label>
+                </div>
+
+                <textarea class="textarea" id="upload-learned" placeholder="오늘 만난 문제를 입력해주세요."></textarea>
+                <br>
+                <span>필요한 경우 코드를 입력해주세요. 버그 때문에 10줄 이상 쓰면 원상복구 됩니다.</span>
+                <br>
+                <textarea class="textarea" id="upload-code" name="code"></textarea>
+
+            </section>
+            <footer class="modal-card-foot">
+                <div class="buttons">
+                    <button class="button is-success" onclick="UploadArticle()">Save changes</button>
+                    <button class="button">Cancel</button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <div class="columns">
+        <!-- title -->
+        <div id="title-group" class="column has-background-grey-light">
+            <h1 class="title is-3">오늘 하루 어땟니 ?</h1>
+
+            <div class="date-group">
+                <span class="icon">
+                    <button class="fa-solid fa-caret-up" onclick="goYesterdayBtn()"></button>
+                </span>
+                <h3 id="current_date" class="subtitle is-3" style="margin-bottom: 0px;">
+                </h3>
+                <span class="icon">
+                    <button class="fa-solid fa-caret-down" onclick="goTomorrowBtn()"></button>
+                </span>
+            </div>
+
+
+        </div>
+        <!-- feed -->
+        <div class="column is-6">
+            <div class="buttongroup" style="margin-bottom: 50px; margin-top: 10px;">
+                <button class="button is-small is-link is-rounded">최신순</button>
+                <button class="button is-small is-primary is-rounded">인기순</button>
+                <button class="js-modal-trigger button is-white" data-target="modal-js-writing">
+                    <i class="fa-solid fa-circle-plus"></i>
+                </button>
+            </div>
+
+
+            <div class="mainfeed">
+                <ul>
+                    {% for articledata in articledatas %}
+                    <li>
+                        <div class="card" style="margin-bottom: 70px;">
+                            <div class="media" style="margin-bottom: 0px;">
+                                <p class="title is-4" style="margin-bottom: 0px;">{{ articledata.userName }}의
+                                    {{articledata.month}}월 {{articledata.day}}일</p>
+                                <span id="thumb-up" class="right-button"><button
+                                        class="fa-solid fa-thumbs-up "></button>
+                                    <span>0</span></span>
+                            </div>
+                            <hr style="margin-top: 0px;">
+                            <h1 id="align-center" class="title is-3">{{ articledata.title}}</h1>
+                            <figure id="align-center" class="card-image is-square">
+                                <img src="http://127.0.0.1:5001/img/{{ articledata.figure_id }}"
+                                    alt="Placeholder image"></img>
+                            </figure>
+                            <div class="learned">
+                                {{articledata.learned}}
+                            </div>
+
+                            <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css"
+                                rel="stylesheet" />
+                            <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+
+                            <pre><code class="code">
+                            {{articledata.code}}
+                            </code></pre>
+                            <pre><code class="language-javascript">{{ articledata.code }}</code></pre>
+
+                            <button class="button is-small is-primary is-rounded is-pulled-right" data-target="modal-js-writing">수정하기</button>
+                        </div>
+
+
+
+                        <!-- articledata에 user_id를 추가하고, articledata['user_id'] == user_id 를 확인할 필요가 있습니다. -->
+                        <!-- 위에 언급한 조건문이 수정하기 버튼에도 있다고 가정하고, 아래 modal도 조건문 안에 있다고 가정합니다. -->
+                        <!-- 또한, articledata에 그 포스트가 db에 가지는 id도 있다고 가정합니다. -->
+
+
+                        <div class="modal" id="modal-js-modify-{{ articledata.post_id }}">
+                            <div class="modal-background"></div>
+                            <div class="modal-card">
+                                <header class="modal-card-head">
+                                    <input class="input is-large" type="text" id="upload-title" placeholder="제목을 입력하세요." />
+                                    <button class="delete" aria-label="close"></button>
+                                </header>
+                                <section class="modal-card-body">
+                    
+                    
+                                    <figure class="image">
+                                        <img src="{{ url_for('static', filename='insert_photo.webp') }}" id="insert-photo" />
+                                    </figure>
+                    
+                    
+                                    <div id="file-js-upload" class="file has-name">
+                                        <label class="file-label">
+                                            <input class="file-input" type="file" accept="image/*" name="resume" />
+                                            <span class="file-cta">
+                                                <span class="file-icon">
+                                                    <i class="fas fa-upload"></i>
+                                                </span>
+                                                <span class="file-label"> Upload </span>
+                                            </span>
+                                            <br>
+                                            <br>
+                                            <span class="file-name"> 사진이 선택되지 않았습니다. </span>
+                                        </label>
+                                    </div>
+                    
+                                    <textarea class="textarea" id="upload-learned" placeholder="오늘 만난 문제를 입력해주세요."></textarea>
+                                    <br>
+                                    <span>필요한 경우 코드를 입력해주세요. 버그 때문에 10줄 이상 쓰면 원상복구 됩니다.</span>
+                                    <br>
+                                    <textarea class="textarea" id="upload-code" name="code"></textarea>
+                    
+                                </section>
+                                <footer class="modal-card-foot">
+                                    <div class="buttons">
+                                        <button class="button is-success" onclick="UploadArticle()">Save changes</button>
+                                        <button class="button">Cancel</button>
+                                    </div>
+                                </footer>
+                            </div>
+                        </div>
+
+
+
+
+
+
+
+
+
+                    </li>
+                    {% endfor %}
+                </ul>
+
+            </div>
+
+        </div>
+
+
+        <!-- blank -->
+        <div class="column has-background-grey-light">
+        </div>
+
+    </div>
+
+    <!-- Prism.js JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-javascript.min.js"></script>
+    <!-- js-beautify JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.0/beautify.min.js"></script>
+
+    <!-- Script to format and highlight code -->
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelectorAll('pre code').forEach((block) => {
+                // Get the code
+                var code = block.textContent.trim();
+                // Format the code using js-beautify
+                var formattedCode = js_beautify(code);
+                // Highlight the formatted code using Prism.js
+                block.innerHTML = Prism.highlight(formattedCode, Prism.languages.javascript, 'javascript');
+            });
+        });
+    </script>
+    
+    <script src="{{ url_for('static', filename='addEventListener.js') }}"></script>
+</body>
+
+</html>
