@@ -159,32 +159,21 @@
     </style>
 
     <script>
-        // 페이지 로드 시 현재 날짜 표시
-        window.onload = function () {
-            updateDateDisplay();
-        };
-
-        const daysOfWeek = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
-        let currentDate = new Date();
-
-        function updateDateDisplay() {
-            const dayName = daysOfWeek[currentDate.getDay()];
-            document.getElementById("current_date").innerHTML = `${dayName}, ${currentDate.toLocaleDateString()}`;
+        function sendData(dayoffset) {
+            $.ajax({
+                type: "GET",
+                url: `/send_date/${dayoffset}`,
+                success: function (response) {
+                    // 응답으로 받은 HTML을 전체 문서로 대체
+                    document.open();
+                    document.write(response);
+                    document.close();
+                },
+                error: function (xhr) {
+                    alert('An error occurred: ' + xhr.responseText);
+                }
+            });
         }
-
-        function goYesterdayBtn() {
-            currentDate.setDate(currentDate.getDate() - 1);
-            updateDateDisplay();
-
-            //DB에서 다시 불러오기
-        }
-
-        function goTomorrowBtn() {
-            currentDate.setDate(currentDate.getDate() + 1);
-            updateDateDisplay();
-            //DB에서 다시 불러오기
-        }
-
 
         function cancleUpload() {
             const fileName = $("#file-js-upload .file-name");
@@ -416,12 +405,12 @@
 
             <div class="date-group">
                 <span class="icon">
-                    <button class="fa-solid fa-caret-up" onclick="goYesterdayBtn()"></button>
+                    <button class="fa-solid fa-caret-up" onclick="sendData('-1') "></button>
                 </span>
-                <h3 id="current_date" class="subtitle is-3" style="margin-bottom: 0px;">
+                <h3 id="current_date" class="subtitle is-3" style="margin-bottom: 0px;">{{currentdate}}
                 </h3>
                 <span class="icon">
-                    <button class="fa-solid fa-caret-down" onclick="goTomorrowBtn()"></button>
+                    <button class="fa-solid fa-caret-down" onclick="sendData('1') "></button>
                 </span>
             </div>
 

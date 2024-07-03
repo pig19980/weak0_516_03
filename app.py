@@ -36,6 +36,27 @@ class CustomJSONProvider(JSONProvider):
     def loads(self, s, **kwargs):
         return json.loads(s, **kwargs)
 
+# 변수 저장 및 읽기를 위한 파일 경로
+VARIABLE_FILE_PATH = 'variable.json'
+
+def save_variable_to_file(variable):
+    with open(VARIABLE_FILE_PATH, 'w') as f:
+        # datetime 객체를 문자열로 변환하여 저장
+        if 'currenttime' in variable:
+            variable['currenttime'] = variable['currenttime'].strftime("%Y-%m-%dT%H:%M:%S")
+        json.dump(variable, f)
+
+def load_variable_from_file():
+    try:
+        with open(VARIABLE_FILE_PATH, 'r') as f:
+            variable = json.load(f)
+            # 문자열을 datetime 객체로 변환
+            if 'currenttime' in variable:
+                variable['currenttime'] = datetime.datetime.strptime(variable['currenttime'], "%Y-%m-%dT%H:%M:%S")
+            return variable
+    except FileNotFoundError:
+        return {}
+    
 
 # 게시글 업로드
 # Card에 들어갈 콘텐츠 객체
@@ -69,12 +90,15 @@ class todayFeedContent:
         self.post_id = post_id
 
 
-def updateFeedContents():
+def updateFeedContents(now):
     # DB에서 오늘 날짜의 CARD 불러오기
-    now = datetime.datetime.now()
     minnow = now.strftime("%Y%m%d00000000")
     next_day = now + timedelta(days=1)
     maxnow = next_day.strftime("%Y%m%d00000000")
+
+    print("NOW")
+    print(minnow)
+    
     # DB Search
     todayCardDB = list(db.posts.find({"created_at": {"$gte": minnow, "$lt": maxnow}}))
     for card in todayCardDB:
@@ -180,12 +204,21 @@ def index():
     # print(f'token?:{token}')
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+
+        # 변수 파일에 dayoffset 저장
+        save_variable_to_file({'currentdate': datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")})
+        
+        # 변수 파일에서 현재 날짜를 로드
+        variable = load_variable_from_file()
+        now_str = variable.get('currentdate', datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
+        now = datetime.datetime.strptime(now_str, "%Y-%m-%dT%H:%M:%S")
+
         return render_template(
-            "index.html",
+            "index.html", 
             token=token,
             user_id=payload["user_id"],
-            user_name=payload["user_name"],
-            articledatas=updateFeedContents(),
+            user_pw=payload["user_pw"],
+            articledatas=updateFeedContents(now), currentdate = now.strftime("%Y-%m-%d"),
         )
     # token이 만료 되었을때
     except jwt.ExpiredSignatureError:
@@ -292,7 +325,41 @@ def addLikes():
     #     return jsonify({"error": "DB 수정실패"})
 
 
+@app.route("/send_date/<dayoffset>")
+def send_date(dayoffset):
+    token = request.cookies.get('token')  # 토큰을 저장할때 쓴 키값
 
+    try:
+        print(f"Received dayoffset: {dayoffset}")
+
+        # 변수 파일에서 현재 날짜를 로드
+        variable = load_variable_from_file()
+        now_str = variable.get('currentdate', datetime.datetime.now())
+        now = datetime.datetime.strptime(now_str, "%Y-%m-%dT%H:%M:%S")
+        
+        if dayoffset == '1':
+            now = now + timedelta(days=1)
+        elif dayoffset == '-1':
+            now = now - timedelta(days=1)
+        else:
+            now = now
+
+        save_variable_to_file({'currentdate': now.strftime("%Y-%m-%dT%H:%M:%S")})
+
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        articledatas = updateFeedContents(now)
+        return render_template(
+            "index.html", 
+            token=token, 
+            user_id=payload['user_id'], 
+            user_pw=payload['user_pw'], 
+            articledatas=articledatas, 
+            currentdate=now.strftime("%Y-%m-%d"))
+    except jwt.ExpiredSignatureError:
+        return '로그인이 만료되었습니다. 다시 로그인 해주세요'
+    except jwt.exceptions.DecodeError:
+        return '로그인 정보가 없습니다.'
+    
 if __name__ == "__main__":
     print(sys.executable)
     app.run("0.0.0.0", port=5001, debug=True)
