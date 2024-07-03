@@ -65,6 +65,7 @@ class todayFeedContent:
         self.learned = learned
         self.code = code
 
+
 def updateFeedContents():
     # DB에서 오늘 날짜의 CARD 불러오기
     # test
