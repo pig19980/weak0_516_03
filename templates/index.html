@@ -131,6 +131,31 @@
             border-radius: 5px;
             overflow: auto;
         }
+
+
+        /* ============ */
+        .floating-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #ff5f5f;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .floating-button:hover {
+            background-color: #ff3f3f;
+        }
     </style>
 
     <script>
@@ -214,6 +239,17 @@
 
 
             // window.location.reload();
+        }
+
+
+
+        function logout() {
+
+            // console.log(document.cookie)
+            document.cookie =  'token=;';
+            // console.log(document.cookie)
+            window.location.href = '/login';
+
         }
 
     </script>
@@ -344,6 +380,9 @@
 
         <!-- blank -->
         <div class="column has-background-grey-light">
+            <button class="floating-button" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
         </div>
 
     </div>
@@ -367,7 +406,7 @@
             });
         });
     </script>
-    
+
     <script>
         // code editor part
         var editor = CodeMirror.fromTextArea(document.getElementById("upload-code"), {
