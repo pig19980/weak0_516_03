@@ -41,9 +41,20 @@ class CustomJSONProvider(JSONProvider):
 # Card에 들어갈 콘텐츠 객체
 class todayFeedContent:
     def __init__(
-        self, u_name, figure_id, datetime, likes, title, imageID, learned, code
+        self,
+        u_name,
+        user_id,
+        figure_id,
+        datetime,
+        likes,
+        title,
+        imageID,
+        learned,
+        code,
+        post_id,
     ):
         self.userName = u_name
+        self.user_id = user_id
         self.figure_id = figure_id
         # datetime 자체로 넘겨줄수있으면 바꾸기!
         self.year = datetime.year
@@ -55,6 +66,7 @@ class todayFeedContent:
         self.imageID = imageID
         self.learned = learned
         self.code = code
+        self.post_id = post_id
 
 
 def updateFeedContents():
@@ -72,6 +84,7 @@ def updateFeedContents():
     for data in todayCardDB:
         dt = todayFeedContent(
             data["u_name"],
+            data["user_id"],
             data["figure_id"],
             datetime.datetime.strptime(data["created_at"], "%Y%m%d%H%M%S%f"),
             data["likes"],
@@ -79,6 +92,7 @@ def updateFeedContents():
             data["figure_id"],
             data["learned"],
             data["code"],
+            data["_id"],
         )
         articledatas.append(dt)
     return articledatas
@@ -150,7 +164,6 @@ def logincheck():
         payload = {
             "user_id": user_data["user_id"],
             "user_pw": user_data["user_pw"],
-            "user_name" : check["user_name"]
         }
         # 토큰을 발급한다.
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
@@ -170,7 +183,7 @@ def index():
             "index.html",
             token=token,
             user_id=payload["user_id"],
-            user_name=payload["user_name"],
+            user_pw=payload["user_pw"],
             articledatas=updateFeedContents(),
         )
     # token이 만료 되었을때
