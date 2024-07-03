@@ -109,7 +109,7 @@ def logincheck():
     if check is None:
         # 로그인 실패
         print("로그인 실패")
-        return jsonify({'result': 'fail', 'message': 'Invalid credentials'}), 401
+        return render_template("login.html", message="가입된 회원이 아닙니다.")
 
     else:  
         # 로그인 성공
@@ -140,7 +140,7 @@ def index():
     # print(f'token?:{token}')
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        return render_template('token.html',token= token,user_id=payload['user_id'],user_pw=payload['user_pw'])
+        return render_template('index.html',token= token,user_id=payload['user_id'],user_pw=payload['user_pw'])
    	# token이 만료 되었을때
     except jwt.ExpriedSignatureError:
         return '로그인이 만료되었습니다. 다시 로그인 해주세요'
