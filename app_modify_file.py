@@ -2,10 +2,7 @@ from bson import ObjectId
 from pymongo import MongoClient
 from flask import Flask, render_template, jsonify, request, redirect, url_for, send_file
 from flask.json.provider import JSONProvider
-
 import requests
-
-
 import gridfs
 import io
 import json
@@ -44,9 +41,20 @@ class CustomJSONProvider(JSONProvider):
 # Card에 들어갈 콘텐츠 객체
 class todayFeedContent:
     def __init__(
-        self, u_name, figure_id, datetime, likes, title, imageID, learned, code
+        self,
+        u_name,
+        user_id,
+        figure_id,
+        datetime,
+        likes,
+        title,
+        imageID,
+        learned,
+        code,
+        post_id,
     ):
         self.userName = u_name
+        self.user_id = user_id
         self.figure_id = figure_id
         # datetime 자체로 넘겨줄수있으면 바꾸기!
         self.year = datetime.year
@@ -58,6 +66,7 @@ class todayFeedContent:
         self.imageID = imageID
         self.learned = learned
         self.code = code
+        self.post_id = post_id
 
 
 def updateFeedContents():
@@ -75,6 +84,7 @@ def updateFeedContents():
     for data in todayCardDB:
         dt = todayFeedContent(
             data["u_name"],
+            data["user_id"],
             data["figure_id"],
             datetime.datetime.strptime(data["created_at"], "%Y%m%d%H%M%S%f"),
             data["likes"],
@@ -82,6 +92,7 @@ def updateFeedContents():
             data["figure_id"],
             data["learned"],
             data["code"],
+            data["_id"],
         )
         articledatas.append(dt)
     return articledatas
@@ -169,14 +180,13 @@ def index():
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         return render_template(
-            "index.html",
+            "modify_button.html",
             token=token,
             user_id=payload["user_id"],
             user_pw=payload["user_pw"],
             articledatas=updateFeedContents(),
         )
     # token이 만료 되었을때
-
     except jwt.ExpiredSignatureError:
         return "로그인이 만료되었습니다. 다시 로그인 해주세요"
     # token이 없을때
@@ -240,8 +250,8 @@ def send_image(figure_id):
             as_attachment=True,
             download_name=file.filename,
         )
-    except gridfs.NoFile:
-        return jsonify({"error": "File not found"}), 404
+    except (gridfs.NoFile, Exception) as e:
+        return send_default_image()
 
 
 def send_default_image():
