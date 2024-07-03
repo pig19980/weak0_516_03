@@ -231,7 +231,7 @@ def index():
             token=token,
             user_id=payload["user_id"],
             user_pw=payload["user_pw"],
-            articledatas=updateFeedContents(now, "NONE"),
+            articledatas=updateFeedContents(now, "NEW"),
             currentdate=now.strftime("%Y-%m-%d"),
         )
     # token이 만료 되었을때
