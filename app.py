@@ -164,6 +164,7 @@ def logincheck():
         payload = {
             "user_id": user_data["user_id"],
             "user_pw": user_data["user_pw"],
+            "user_name" : check["user_name"]
         }
         # 토큰을 발급한다.
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
@@ -183,7 +184,7 @@ def index():
             "index.html",
             token=token,
             user_id=payload["user_id"],
-            user_pw=payload["user_pw"],
+            user_name=payload["user_name"],
             articledatas=updateFeedContents(),
         )
     # token이 만료 되었을때
@@ -267,6 +268,29 @@ def send_default_image():
         )
     else:
         return jsonify({"error": "Default image not found"}), 404
+
+
+
+@app.route("/addLikes", methods=["POST"])
+def addLikes():
+
+    user_id = request.form['user_id']
+    post_id = request.form['post_id']
+    likes = int(request.form['likesnum'])
+
+    print(f'')
+    print(f'user : {user_id} ,  post : {post_id} ,   likes : {likes} , ')
+
+# post_id 로 게시글 찾아와서 좋아요 업데이트 하기 
+    # try:
+    db.posts.update_one({'_id':ObjectId(post_id)},{'$set':{'likes':likes}})
+
+
+    response = redirect(url_for("index"))
+    return response
+    # except:
+    #     return jsonify({"error": "DB 수정실패"})
+
 
 
 if __name__ == "__main__":
