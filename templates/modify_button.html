@@ -210,10 +210,19 @@
                     window.location.reload();
                 }
             })
+           
+        }
 
+        function cancleModify(target_id) {
+            const fileName = $(`#file-js-modify-${target_id} .file-name`);
+            const newImg = $(`#modal-js-modify-${target_id} > div.modal-card > section > figure`);
+            const fileInput = $(`#file-js-modify-${target_id} input[type=file]`);
 
+            fileInput.val('')
+            fileName.text("사진이 선택되지 않았습니다.");
 
-            // window.location.reload();
+            newImg.find("img").attr("src", "{{ url_for('static', filename='insert_photo.webp') }}").attr("id", "insert-photo");
+            newImg.find("button").remove();
         }
 
     </script>
@@ -264,7 +273,7 @@
             </section>
             <footer class="modal-card-foot">
                 <div class="buttons">
-                    <button class="button is-success" onclick="UploadArticle()">Save changes</button>
+                    <button class="button is-success" onclick="UploadArticle()">Upload post</button>
                     <button class="button">Cancel</button>
                 </div>
             </footer>
@@ -345,24 +354,22 @@
 
 
                         {% if articledata.user_id == user_id %}
-                        <div class="modal" id="modal-js-modify-{{ articledata.post_id }}">
+                        <div class="modal js-modify" id="modal-js-modify-{{ articledata.post_id }}">
                             <div class="modal-background"></div>
                             <div class="modal-card">
                                 <header class="modal-card-head">
-                                    <input class="input is-large" type="text" id="upload-title" placeholder="제목을 입력하세요." value="{{ articledata.title }}"/>
+                                    <input class="input is-large" type="text" id="modify-title-{{ articledata.post_id }}" placeholder="제목을 입력하세요." value="{{ articledata.title }}"/>
                                     <button class="delete" aria-label="close"></button>
                                 </header>
                                 <section class="modal-card-body">
-                    
-                    
+
                                     <figure class="image">
-                                        <img src="{{ url_for('static', filename='insert_photo.webp') }}" id="insert-photo" />
+                                        <img src="http://127.0.0.1:5001/img/{{ articledata.figure_id }}" id="insert-photo" />
                                     </figure>
                     
-                    
-                                    <div id="file-js-upload" class="file has-name">
+                                    <div id="file-js-modify-{{ articledata.post_id }}" class="file has-name">
                                         <label class="file-label">
-                                            <input class="file-input" type="file" accept="image/*" name="resume" />
+                                            <input class="file-input" type="file" accept="image/*" name="resume" data-targetid="{{ articledata.post_id }}" />
                                             <span class="file-cta">
                                                 <span class="file-icon">
                                                     <i class="fas fa-upload"></i>
@@ -374,12 +381,13 @@
                                             <span class="file-name"> 사진이 선택되지 않았습니다. </span>
                                         </label>
                                     </div>
+
                     
-                                    <textarea class="textarea" id="upload-learned" placeholder="오늘 만난 문제를 입력해주세요." value="{{ articledata.learned }}"></textarea>
+                                    <textarea class="textarea" id="modify-learned-{{ articledata.post_id }}" placeholder="오늘 만난 문제를 입력해주세요.">{{ articledata.learned }}</textarea>
                                     <br>
                                     <span>필요한 경우 코드를 입력해주세요.</span>
                                     <br>
-                                    <textarea class="textarea" id="upload-code" name="code"></textarea>
+                                    <textarea class="textarea modify-code" id="modify-code-{{ articledata.post_id }}" name="code" data-targetid="{{ articledata.post_id }}">{{ articledata.code }}</textarea>
                     
                                 </section>
                                 <footer class="modal-card-foot">

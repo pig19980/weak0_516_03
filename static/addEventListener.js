@@ -1,8 +1,19 @@
 // code editor part
-var editor = CodeMirror.fromTextArea(document.getElementById("upload-code"), {
+let editor = CodeMirror.fromTextArea(document.getElementById("upload-code"), {
     lineNumbers: false,
     mode: "javascript"
-}).setSize(null, 300);
+});
+editor.setSize(null, 300);
+
+let modify_editors = {};
+(document.querySelectorAll('.modify-code') || []).forEach(($textarea) => {
+    let temp_editor = CodeMirror.fromTextArea($textarea, {
+        lineNumbers: false,
+        mode: "javascript"
+    });
+    temp_editor.setSize(null, 300);
+    modify_editors[$textarea.dataset.targetid] = temp_editor;
+});
 
 
 // modal part
@@ -26,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     (document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
         const modal = $trigger.dataset.target;
         const $target = document.getElementById(modal);
-        console.log(modal)
 
         $trigger.addEventListener('click', () => {
             openModal($target);
@@ -51,8 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // image upload part
-const fileInput = document.querySelector("#file-js-upload input[type=file]");
-console.log(fileInput.files);
+const fileInput = $("#file-js-upload input[type=file]")[0];
 fileInput.onchange = () => {
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
@@ -60,16 +69,35 @@ fileInput.onchange = () => {
         const newImg = $("#modal-js-writing > div.modal-card > section > figure");
         fileName.text(file.name);
 
+
         newImg.find("img").attr("src", URL.createObjectURL(file)).attr("id", "before-uploading");
 
         newImg.append(
             `<button class="delete" aria-label="close" onclick="cancleUpload()"></button>`
         )
-        // const newCloseButton = document.createElement("button");
-        // newCloseButton.classList.add("delete");
-        // newCloseButton.setAttribute("aria-label", "close");
-        // newImg.appendChild(newCloseButton);
-
     }
 };
 
+// modifying
+const fileChanges = $('.js-modify input[type=file]');
+fileChanges.each((index, $fileChange) => {
+    const filechange = $fileChange;
+    filechange.onchange = () => {
+        if (filechange.files.length > 0) {
+            const file = filechange.files[0];
+            const target_id = filechange.dataset.targetid;
+            const fileName = $(`#file-js-modify-${target_id} .file-name`);
+            const newImg = $(`#modal-js-modify-${target_id} > div.modal-card > section > figure`);
+            fileName.text(file.name);
+    
+            newImg.find("img").attr("src", URL.createObjectURL(file)).attr("id", "before-uploading");
+    
+            newImg.append(
+                `<button class="delete" aria-label="close" onclick="cancleModify('${target_id}')"></button>`
+            )
+            console.log(target_id);
+        }
+    }
+
+});
+console.log(fileChanges);
