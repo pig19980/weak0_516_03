@@ -1,13 +1,13 @@
 // code editor part
-let editor = CodeMirror.fromTextArea(document.getElementById("upload-code"), {
+var editor = CodeMirror.fromTextArea(document.getElementById("upload-code"), {
     lineNumbers: false,
     mode: "javascript"
 });
 editor.setSize(null, 300);
 
-let modify_editors = {};
+var modify_editors = {};
 (document.querySelectorAll('.modify-code') || []).forEach(($textarea) => {
-    let temp_editor = CodeMirror.fromTextArea($textarea, {
+    var temp_editor = CodeMirror.fromTextArea($textarea, {
         lineNumbers: false,
         mode: "javascript"
     });
@@ -36,8 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add a click event on buttons to open a specific modal
     (document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
-        const modal = $trigger.dataset.target;
-        const $target = document.getElementById(modal);
+        var modal = $trigger.dataset.target;
+        var $target = document.getElementById(modal);
 
         $trigger.addEventListener('click', () => {
             openModal($target);
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add a click event on various child elements to close the parent modal
     (document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach(($close) => {
-        const $target = $close.closest('.modal');
+        var $target = $close.closest('.modal');
 
         $close.addEventListener('click', () => {
             closeModal($target);
@@ -62,12 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // image upload part
-const fileInput = $("#file-js-upload input[type=file]")[0];
-fileInput.onchange = () => {
-    if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const fileName = $("#file-js-upload .file-name");
-        const newImg = $("#modal-js-writing > div.modal-card > section > figure");
+var fileUpload = $("#file-js-upload input[type=file]")[0];
+fileUpload.onchange = () => {
+    if (fileUpload.files.length > 0) {
+        var file = fileUpload.files[0];
+        var fileName = $("#file-js-upload .file-name");
+        var newImg = $("#modal-js-writing > div.modal-card > section > figure");
         fileName.text(file.name);
 
 
@@ -80,15 +80,15 @@ fileInput.onchange = () => {
 };
 
 // modifying
-const fileChanges = $('.js-modify input[type=file]');
+var fileChanges = $('.js-modify input[type=file]');
 fileChanges.each((index, $fileChange) => {
-    const filechange = $fileChange;
+    var filechange = $fileChange;
     filechange.onchange = () => {
         if (filechange.files.length > 0) {
-            const file = filechange.files[0];
-            const target_id = filechange.dataset.targetid;
-            const fileName = $(`#file-js-modify-${target_id} .file-name`);
-            const newImg = $(`#modal-js-modify-${target_id} > div.modal-card > section > figure`);
+            var file = filechange.files[0];
+            var target_id = filechange.dataset.targetid;
+            var fileName = $(`#file-js-modify-${target_id} .file-name`);
+            var newImg = $(`#modal-js-modify-${target_id} > div.modal-card > section > figure`);
             fileName.text(file.name);
     
             newImg.find("img").attr("src", URL.createObjectURL(file)).attr("id", `modify-img-${target_id}`);
@@ -96,9 +96,7 @@ fileChanges.each((index, $fileChange) => {
             newImg.append(
                 `<button class="delete" aria-label="close" onclick="CancleModify('${target_id}')"></button>`
             )
-            console.log(target_id);
         }
     }
 
 });
-console.log(fileChanges);
