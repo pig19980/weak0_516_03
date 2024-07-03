@@ -241,8 +241,8 @@ def send_image(figure_id):
             as_attachment=True,
             download_name=file.filename,
         )
-    except gridfs.NoFile:
-        return jsonify({"error": "File not found"}), 404
+    except (gridfs.NoFile,Exception) as e:
+        return send_default_image()
 
 
 def send_default_image():
