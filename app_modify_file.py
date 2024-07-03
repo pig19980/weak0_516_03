@@ -229,6 +229,41 @@ def post_article():
     return jsonify({"result": "success"})
 
 
+# 할 일: uid를 find하고 db에 잘 저장하기
+# like초기화
+@app.route("/modifyArticle", methods=["POST"])
+def modify_article():
+    # 1. 클라이언트로부터 데이터를 받기
+    title = request.form["title"]
+    learned = request.form["learned"]
+    code = request.form["code"]
+    if "figure" not in request.files:
+        print("no fig")
+        figure_id = None
+    else:
+        print("yes fig")
+        figure = request.files["figure"]
+        print(figure.filename)
+        figure_id = fs.put(
+            figure.read(), filename=figure.filename, content_type=figure.content_type
+        )
+    print(title, learned, code, figure_id)
+    post = {
+        "figure_id": figure_id,
+        "u_name": db.users.find_one({"user_id": request.form["user_id"]})["user_name"],
+        "user_id": request.form["user_id"],
+        "title": title,
+        "likes": 0,
+        "learned": learned,
+        "code": code,
+        "created_at": datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
+    }
+    print(post)
+    # 3. mongoDB에 데이터를 넣기
+    db.posts.insert_one(post)
+    return jsonify({"result": "success"})
+
+
 # post의 이미지를 불러올 때 img src="http://127.0.0.1:5000/img/{$figure_id}">
 # 형식으로 하시면 됩니다.
 # 서버로 하는 경우는, 주소를 서버로.
