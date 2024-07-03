@@ -4,6 +4,8 @@ from pymongo import MongoClient
 from flask import Flask, render_template, jsonify, request, redirect,url_for, send_file
 from flask.json.provider import JSONProvider
 
+import requests
+
 import gridfs
 import io
 
@@ -28,11 +30,6 @@ SECRET_KEY = 'jungle_3' # 토큰을 암호화할 key 세팅
 client = MongoClient("localhost", 27017)
 db = client.dbjungle
 fs = gridfs.GridFS(db)
-
-
-
-
-
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -68,27 +65,29 @@ class todayFeedContent:
         self.learned = learned
         self.code = code
 
+def updateFeedContents():
+    # DB에서 오늘 날짜의 CARD 불러오기
+    now = datetime.datetime.now()
+    minnow = now.strftime("%Y%m%d00000000")
 
-# DB에서 오늘 날짜의 CARD 불러오기
-todayCardDB = []
+    next_day = now + timedelta(days=1)
 
-now = datetime.datetime.now()
-minnow = now.strftime("%Y%m%d00000000")
+    maxnow = next_day.strftime("%Y%m%d00000000")
 
-next_day = now + timedelta(days=1)
+    #DB Search
+    todayCardDB = list(db.posts.find({'created_at': {'$gte': minnow, '$lt': maxnow}}))
 
-maxnow = next_day.strftime("%Y%m%d00000000")
+    for card in todayCardDB:
+        print(card["created_at"])
+    #[todayFeedContent]객체 리스트 생성하기
+    articledatas = []
+    for data in todayCardDB:
+        dt = todayFeedContent(data["u_name"],data["figure_id"],datetime.datetime.strptime(data['created_at'], "%Y%m%d%H%M%S%f"), data["likes"], data["title"], data["figure_id"], data["learned"],data["code"])
+        articledatas.append(dt)
 
-#DB Search
-todayCardDB = list(db.posts.find({'created_at': {'$gte': minnow, '$lt': maxnow}}))
+    return articledatas
 
-for card in todayCardDB:
-    print(card["created_at"])
-#[todayFeedContent]객체 리스트 생성하기
-articledatas = []
-for data in todayCardDB:
-    dt = todayFeedContent(data["u_name"],data["figure_id"],datetime.datetime.strptime(data['created_at'], "%Y%m%d%H%M%S%f"), data["likes"], data["title"], data["figure_id"], data["learned"],data["code"])
-    articledatas.append(dt)
+
 
 
 # 위에 정의되 custom encoder 를 사용하게끔 설정한다.
@@ -185,7 +184,7 @@ def index():
     # print(f'token?:{token}')
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        return render_template('index.html',token= token,user_id=payload['user_id'],user_pw=payload['user_pw'], articledatas = articledatas )
+        return render_template('index.html',token= token,user_id=payload['user_id'],user_pw=payload['user_pw'], articledatas = updateFeedContents() )
    	# token이 만료 되었을때
     except jwt.ExpiredSignatureError:
         return '로그인이 만료되었습니다. 다시 로그인 해주세요'
@@ -244,6 +243,10 @@ def send_image(figure_id):
     # row = db.posts.find(ObjectId("6683ab97caca1a79eaba33ba"))
     # print(row)
     # print(figure_id)
+    # figure_id가 'null' 문자열이거나 비어 있는 경우 디폴트 이미지 반환
+    if figure_id == 'null' or figure_id.strip() == '':
+        return send_default_image()
+    
     try:
         file = fs.get(ObjectId(figure_id))
         # print("file found")
@@ -254,9 +257,23 @@ def send_image(figure_id):
             as_attachment=True,
             download_name=file.filename,
         )
-    except gridfs.NoFile:
-        return jsonify({"error": "File not found"}), 404
+    except (gridfs.NoFile, Exception) as e:
+        return send_default_image()
 
+    
+def send_default_image():
+    default_image_url = 'https://jungle-compass.krafton.com/pluginfile.php/1/theme_moove/logo/1705035087/jungle_big.png'  # 디폴트 이미지 경로
+    response = requests.get(default_image_url)
+    if response.status_code == 200:
+        default_mime_type = response.headers.get('Content-Type', 'image/png')
+        return send_file(
+            io.BytesIO(response.content),
+            mimetype=default_mime_type,
+            as_attachment=True,
+            download_name='default_image.png',
+        )
+    else:
+        return jsonify({"error": "Default image not found"}), 404
 
 
 
