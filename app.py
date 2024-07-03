@@ -6,7 +6,6 @@ from flask.json.provider import JSONProvider
 import requests
 
 
-
 import gridfs
 import io
 import json
@@ -24,6 +23,7 @@ SECRET_KEY = "jungle_3"  # 토큰을 암호화할 key 세팅
 client = MongoClient("localhost", 27017)
 db = client.dbjungle
 fs = gridfs.GridFS(db)
+
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -85,18 +85,6 @@ def updateFeedContents():
         )
         articledatas.append(dt)
     return articledatas
-
-
-#DB Search
-todayCardDB = list(db.posts.find({'created_at': {'$gte': minnow, '$lt': maxnow}}))
-
-for card in todayCardDB:
-    print(card["created_at"])
-#[todayFeedContent]객체 리스트 생성하기
-articledatas = []
-for data in todayCardDB:
-    dt = todayFeedContent(data["u_name"],data["figure_id"],datetime.datetime.strptime(data['created_at'], "%Y%m%d%H%M%S%f"), data["likes"], data["title"], data["figure_id"], data["learned"],data["code"])
-    articledatas.append(dt)
 
 
 # 위에 정의되 custom encoder 를 사용하게끔 설정한다.
@@ -269,7 +257,6 @@ def send_default_image():
         )
     else:
         return jsonify({"error": "Default image not found"}), 404
-
 
 
 if __name__ == "__main__":
