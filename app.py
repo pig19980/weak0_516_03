@@ -4,6 +4,8 @@ from pymongo import MongoClient
 from flask import Flask, render_template, jsonify, request, redirect,url_for, send_file
 from flask.json.provider import JSONProvider
 
+import requests
+
 import gridfs
 import io
 
@@ -244,6 +246,10 @@ def send_image(figure_id):
     # row = db.posts.find(ObjectId("6683ab97caca1a79eaba33ba"))
     # print(row)
     # print(figure_id)
+    # figure_id가 'null' 문자열이거나 비어 있는 경우 디폴트 이미지 반환
+    if figure_id == 'null' or figure_id.strip() == '':
+        return send_default_image()
+    
     try:
         file = fs.get(ObjectId(figure_id))
         # print("file found")
@@ -254,9 +260,23 @@ def send_image(figure_id):
             as_attachment=True,
             download_name=file.filename,
         )
-    except gridfs.NoFile:
-        return jsonify({"error": "File not found"}), 404
+    except (gridfs.NoFile, Exception) as e:
+        return send_default_image()
 
+    
+def send_default_image():
+    default_image_url = 'https://jungle-compass.krafton.com/pluginfile.php/1/theme_moove/logo/1705035087/jungle_big.png'  # 디폴트 이미지 경로
+    response = requests.get(default_image_url)
+    if response.status_code == 200:
+        default_mime_type = response.headers.get('Content-Type', 'image/png')
+        return send_file(
+            io.BytesIO(response.content),
+            mimetype=default_mime_type,
+            as_attachment=True,
+            download_name='default_image.png',
+        )
+    else:
+        return jsonify({"error": "Default image not found"}), 404
 
 
 
