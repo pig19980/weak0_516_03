@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     (document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
         const modal = $trigger.dataset.target;
         const $target = document.getElementById(modal);
+        console.log(modal)
 
         $trigger.addEventListener('click', () => {
             openModal($target);

@@ -1,29 +1,21 @@
 from bson import ObjectId
 from pymongo import MongoClient
-
 from flask import Flask, render_template, jsonify, request, redirect, url_for, send_file
 from flask.json.provider import JSONProvider
-
+import requests
 import gridfs
 import io
-
 import json
 import sys
-
 import jwt
-
 from jinja2 import Template
 
 # timestamp
 import datetime
 from datetime import timedelta
 
-
 app = Flask(__name__)
-
 SECRET_KEY = "jungle_3"  # 토큰을 암호화할 key 세팅
-
-
 # db connection
 client = MongoClient("localhost", 27017)
 db = client.dbjungle
@@ -46,57 +38,64 @@ class CustomJSONProvider(JSONProvider):
 
 
 # 게시글 업로드
-
-
 # Card에 들어갈 콘텐츠 객체
 class todayFeedContent:
     def __init__(
-        self, u_name, figure_id, datetime, likes, title, imageID, learned, code
+        self,
+        u_name,
+        user_id,
+        figure_id,
+        datetime,
+        likes,
+        title,
+        imageID,
+        learned,
+        code,
+        post_id,
     ):
         self.userName = u_name
+        self.user_id = user_id
         self.figure_id = figure_id
         # datetime 자체로 넘겨줄수있으면 바꾸기!
         self.year = datetime.year
         self.month = datetime.month
         self.day = datetime.day
         self.time = datetime.time
-
         self.likes = likes
         self.title = title
         self.imageID = imageID
         self.learned = learned
         self.code = code
+        self.post_id = post_id
 
 
-# DB에서 오늘 날짜의 CARD 불러오기
-todayCardDB = []
-
-now = datetime.datetime.now()
-minnow = now.strftime("%Y%m%d00000000")
-
-next_day = now + timedelta(days=1)
-
-maxnow = next_day.strftime("%Y%m%d00000000")
-
-# DB Search
-todayCardDB = list(db.posts.find({"created_at": {"$gte": minnow, "$lt": maxnow}}))
-
-for card in todayCardDB:
-    print(card["created_at"])
-# [todayFeedContent]객체 리스트 생성하기
-articledatas = []
-for data in todayCardDB:
-    dt = todayFeedContent(
-        data["u_name"],
-        data["figure_id"],
-        datetime.datetime.strptime(data["created_at"], "%Y%m%d%H%M%S%f"),
-        data["likes"],
-        data["title"],
-        data["figure_id"],
-        data["learned"],
-        data["code"],
-    )
-    articledatas.append(dt)
+def updateFeedContents():
+    # DB에서 오늘 날짜의 CARD 불러오기
+    now = datetime.datetime.now()
+    minnow = now.strftime("%Y%m%d00000000")
+    next_day = now + timedelta(days=1)
+    maxnow = next_day.strftime("%Y%m%d00000000")
+    # DB Search
+    todayCardDB = list(db.posts.find({"created_at": {"$gte": minnow, "$lt": maxnow}}))
+    for card in todayCardDB:
+        print(card["created_at"])
+    # [todayFeedContent]객체 리스트 생성하기
+    articledatas = []
+    for data in todayCardDB:
+        dt = todayFeedContent(
+            data["u_name"],
+            data["user_id"],
+            data["figure_id"],
+            datetime.datetime.strptime(data["created_at"], "%Y%m%d%H%M%S%f"),
+            data["likes"],
+            data["title"],
+            data["figure_id"],
+            data["learned"],
+            data["code"],
+            data["_id"],
+        )
+        articledatas.append(dt)
+    return articledatas
 
 
 # 위에 정의되 custom encoder 를 사용하게끔 설정한다.
@@ -120,18 +119,15 @@ def insert_user_data():
     upw_receive = request.form["regi_pw"]  # 클라이언트로부터 user_pw을 받는 부분
     upw2_receive = request.form["regi_pw2"]  # 클라이언트로부터 user_pw을 받는 부분
     uname_receive = request.form["regi_name"]  # 클라이언트로부터 user_pw을 받는 부분
-
     if db.users.find_one({"user_id": uid_receive}) is None:
         # 중복아이디가 없으면 실행되는 이중 조건
         if upw_receive == upw2_receive:
             print("비번일치")
-
             user_data = {
                 "user_id": uid_receive,
                 "user_pw": upw_receive,
                 "user_name": uname_receive,
             }
-
             db.users.insert_one(user_data)
             response = redirect(url_for("login"))
             return response
@@ -150,16 +146,13 @@ def logincheck():
     # 1. 클라이언트로부터 데이터를 받기
     uid_receive = request.form["user_id"]  # 클라이언트로부터 user_id을 받는 부분
     upw_receive = request.form["user_pw"]  # 클라이언트로부터 user_pw을 받는 부분
-
     user_data = {
         "user_id": uid_receive,
         "user_pw": upw_receive,
     }
-
     check = db.users.find_one(
         {"user_id": user_data["user_id"], "user_pw": user_data["user_pw"]}
     )
-
     if check is None:
         # 로그인 실패
         print("로그인 실패")
@@ -174,10 +167,8 @@ def logincheck():
         }
         # 토큰을 발급한다.
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
-
         response = redirect(url_for("index"))
         response.set_cookie("token", token)
-
         return response
 
 
@@ -193,7 +184,7 @@ def index():
             token=token,
             user_id=payload["user_id"],
             user_pw=payload["user_pw"],
-            articledatas=articledatas,
+            articledatas=updateFeedContents(),
         )
     # token이 만료 되었을때
     except jwt.ExpiredSignatureError:
@@ -211,7 +202,6 @@ def post_article():
     title = request.form["title"]
     learned = request.form["learned"]
     code = request.form["code"]
-
     if "figure" not in request.files:
         print("no fig")
         figure_id = None
@@ -222,9 +212,7 @@ def post_article():
         figure_id = fs.put(
             figure.read(), filename=figure.filename, content_type=figure.content_type
         )
-
     print(title, learned, code, figure_id)
-
     post = {
         "figure_id": figure_id,
         "u_name": db.users.find_one({"user_id": request.form["user_id"]})["user_name"],
@@ -235,24 +223,23 @@ def post_article():
         "code": code,
         "created_at": datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
     }
-
     print(post)
     # 3. mongoDB에 데이터를 넣기
     db.posts.insert_one(post)
-
     return jsonify({"result": "success"})
 
 
 # post의 이미지를 불러올 때 img src="http://127.0.0.1:5000/img/{$figure_id}">
 # 형식으로 하시면 됩니다.
 # 서버로 하는 경우는, 주소를 서버로.
-
-
 @app.route("/img/<figure_id>")
 def send_image(figure_id):
     # row = db.posts.find(ObjectId("6683ab97caca1a79eaba33ba"))
     # print(row)
     # print(figure_id)
+    # figure_id가 'null' 문자열이거나 비어 있는 경우 디폴트 이미지 반환
+    if figure_id == "null" or figure_id.strip() == "":
+        return send_default_image()
     try:
         file = fs.get(ObjectId(figure_id))
         # print("file found")
@@ -263,8 +250,23 @@ def send_image(figure_id):
             as_attachment=True,
             download_name=file.filename,
         )
-    except gridfs.NoFile:
-        return jsonify({"error": "File not found"}), 404
+    except (gridfs.NoFile, Exception) as e:
+        return send_default_image()
+
+
+def send_default_image():
+    default_image_url = "https://jungle-compass.krafton.com/pluginfile.php/1/theme_moove/logo/1705035087/jungle_big.png"  # 디폴트 이미지 경로
+    response = requests.get(default_image_url)
+    if response.status_code == 200:
+        default_mime_type = response.headers.get("Content-Type", "image/png")
+        return send_file(
+            io.BytesIO(response.content),
+            mimetype=default_mime_type,
+            as_attachment=True,
+            download_name="default_image.png",
+        )
+    else:
+        return jsonify({"error": "Default image not found"}), 404
 
 
 if __name__ == "__main__":

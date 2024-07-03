@@ -257,7 +257,7 @@
 
                 <textarea class="textarea" id="upload-learned" placeholder="오늘 만난 문제를 입력해주세요."></textarea>
                 <br>
-                <span>필요한 경우 코드를 입력해주세요. 버그 때문에 10줄 이상 쓰면 원상복구 됩니다.</span>
+                <span>필요한 경우 코드를 입력해주세요.</span>
                 <br>
                 <textarea class="textarea" id="upload-code" name="code"></textarea>
 
@@ -331,7 +331,10 @@
                             </code></pre>
                             <pre><code class="language-javascript">{{ articledata.code }}</code></pre>
 
-                            <button class="button is-small is-primary is-rounded is-pulled-right" data-target="modal-js-writing">수정하기</button>
+
+                            {% if articledata.user_id == user_id %}
+                            <button class="button is-small is-primary is-rounded is-pulled-right js-modal-trigger" data-target="modal-js-modify-{{ articledata.post_id }}">수정하기</button>
+                            {% endif %}
                         </div>
 
 
@@ -341,11 +344,12 @@
                         <!-- 또한, articledata에 그 포스트가 db에 가지는 id도 있다고 가정합니다. -->
 
 
+                        {% if articledata.user_id == user_id %}
                         <div class="modal" id="modal-js-modify-{{ articledata.post_id }}">
                             <div class="modal-background"></div>
                             <div class="modal-card">
                                 <header class="modal-card-head">
-                                    <input class="input is-large" type="text" id="upload-title" placeholder="제목을 입력하세요." />
+                                    <input class="input is-large" type="text" id="upload-title" placeholder="제목을 입력하세요." value="{{ articledata.title }}"/>
                                     <button class="delete" aria-label="close"></button>
                                 </header>
                                 <section class="modal-card-body">
@@ -371,9 +375,9 @@
                                         </label>
                                     </div>
                     
-                                    <textarea class="textarea" id="upload-learned" placeholder="오늘 만난 문제를 입력해주세요."></textarea>
+                                    <textarea class="textarea" id="upload-learned" placeholder="오늘 만난 문제를 입력해주세요." value="{{ articledata.learned }}"></textarea>
                                     <br>
-                                    <span>필요한 경우 코드를 입력해주세요. 버그 때문에 10줄 이상 쓰면 원상복구 됩니다.</span>
+                                    <span>필요한 경우 코드를 입력해주세요.</span>
                                     <br>
                                     <textarea class="textarea" id="upload-code" name="code"></textarea>
                     
@@ -386,6 +390,7 @@
                                 </footer>
                             </div>
                         </div>
+                        {% endif %}
 
 
 
