@@ -93,7 +93,7 @@ fileChanges.each((index, $fileChange) => {
             newImg.find("img").attr("src", URL.createObjectURL(file)).attr("id", "before-uploading");
     
             newImg.append(
-                `<button class="delete" aria-label="close" onclick="cancleModify('${target_id}')"></button>`
+                `<button class="delete" aria-label="close" onclick="CancleModify('${target_id}')"></button>`
             )
             console.log(target_id);
         }

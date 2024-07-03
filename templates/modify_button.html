@@ -213,16 +213,60 @@
            
         }
 
-        function cancleModify(target_id) {
+        function CancleModify(target_id) {
             const fileName = $(`#file-js-modify-${target_id} .file-name`);
             const newImg = $(`#modal-js-modify-${target_id} > div.modal-card > section > figure`);
             const fileInput = $(`#file-js-modify-${target_id} input[type=file]`);
 
             fileInput.val('')
             fileName.text("사진이 선택되지 않았습니다.");
+            
+            const originImgSrc = $(`#post-img-${target_id}`).prop('src');
+            console.log(originImgSrc)
 
-            newImg.find("img").attr("src", "{{ url_for('static', filename='insert_photo.webp') }}").attr("id", "insert-photo");
+            newImg.find("img").attr("src", originImgSrc).attr("id", "insert-photo");
             newImg.find("button").remove();
+        }
+
+
+        function ModifyArticle() {
+            const fileInput = $("#file-js-upload input[type=file]");
+
+            var formData = new FormData();
+            let files = fileInput[0].files;
+            if (files.length > 0) {
+                console.log("figure appended");
+                formData.append("figure", files[0]);
+            }
+
+            if ($("#upload-title").val() == '' || $("#upload-learned").val() == '') {
+                alert("제목이나 내용이 없습니다.");
+                return;
+            }
+
+            formData.append("title", $("#upload-title").val());
+            formData.append("learned", $("#upload-learned").val());
+            formData.append("code", editor.getValue());
+            formData.append("user_id", "{{user_id}}")
+            console.log("{{user_id}}")
+            // for (let key of formData.keys()) {
+            // 	console.log(key);
+            // }
+            // for (let value of formData.values()) {
+            // 	console.log(value);
+            // }
+            $.ajax({
+                type: 'POST',
+                url: '/writeArticle',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (result) {
+                    alert("Uploaded");
+                    window.location.reload();
+                }
+            })
+           
         }
 
     </script>
@@ -325,7 +369,7 @@
                             <h1 id="align-center" class="title is-3">{{ articledata.title}}</h1>
                             <figure id="align-center" class="card-image is-square">
                                 <img src="http://127.0.0.1:5001/img/{{ articledata.figure_id }}"
-                                    alt="Placeholder image"></img>
+                                    alt="Placeholder image" id="post-img-{{ articledata.post_id }}"></img>
                             </figure>
                             <div class="learned">
                                 {{articledata.learned}}
