@@ -214,17 +214,10 @@ def index():
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
 
-        # 변수 파일에 dayoffset 저장
-        save_variable_to_file(
-            {"currentdate": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")}
-        )
+        now = datetime.datetime.now()
 
-        # 변수 파일에서 현재 날짜를 로드
-        variable = load_variable_from_file()
-        now_str = variable.get(
-            "currentdate", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        )
-        now = datetime.datetime.strptime(now_str, "%Y-%m-%dT%H:%M:%S")
+        prev_day = now - timedelta(days=1)
+        next_day = now + timedelta(days=1)
 
         return render_template(
             "index.html",
@@ -232,7 +225,9 @@ def index():
             user_id=payload["user_id"],
             user_pw=payload["user_pw"],
             articledatas=updateFeedContents(now, "NEW"),
+            yesterday = prev_day.strftime("%Y-%m-%d"),
             currentdate=now.strftime("%Y-%m-%d"),
+            NextDate = next_day.strftime("%Y-%m-%d")
         )
     # token이 만료 되었을때
     except jwt.ExpiredSignatureError:
@@ -410,7 +405,7 @@ def addLikes():
         # 변수 파일에서 현재 날짜를 로드
         variable = load_variable_from_file()
         now_str = variable.get("currentdate", datetime.datetime.now())
-        now = datetime.datetime.strptime(now_str, "%Y-%m-%dT%H:%M:%S")
+        now = datetime.datetime.strptime(now_str, "%Y-%m-%d")
 
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         articledatas = updateFeedContents(now, "LIKES")
@@ -436,28 +431,18 @@ def addLikes():
     #     return jsonify({"error": "DB 수정실패"})
 
 
-@app.route("/send_date/<dayoffset>")
-def send_date(dayoffset):
+@app.route("/send_date/<today>")
+def send_date(today):
     token = request.cookies.get("token")  # 토큰을 저장할때 쓴 키값
 
     try:
-        print(f"Received dayoffset: {dayoffset}")
+        now = datetime.datetime.strptime(today, "%Y-%m-%d")
 
-        # 변수 파일에서 현재 날짜를 로드
-        variable = load_variable_from_file()
-        now_str = variable.get("currentdate", datetime.datetime.now())
-        now = datetime.datetime.strptime(now_str, "%Y-%m-%dT%H:%M:%S")
-
-        if dayoffset == "1":
-            now = now + timedelta(days=1)
-        elif dayoffset == "-1":
-            now = now - timedelta(days=1)
-        else:
-            now = now
-
-        save_variable_to_file({"currentdate": now.strftime("%Y-%m-%dT%H:%M:%S")})
+        prev_day = now - timedelta(days=1)
+        next_day = now + timedelta(days=1)
 
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+
         articledatas = updateFeedContents(now, "NONE")
         return render_template(
             "index.html",
@@ -465,7 +450,9 @@ def send_date(dayoffset):
             user_id=payload["user_id"],
             user_pw=payload["user_pw"],
             articledatas=articledatas,
+            yesterday = prev_day.strftime("%Y-%m-%d"),
             currentdate=now.strftime("%Y-%m-%d"),
+            tomorrow = next_day.strftime("%Y-%m-%d")
         )
     except jwt.ExpiredSignatureError:
         return "로그인이 만료되었습니다. 다시 로그인 해주세요"

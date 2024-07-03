@@ -153,10 +153,10 @@
 
     <script>
 
-        function sendData(dayoffset) {
+        function sendData(today) {
             $.ajax({
                 type: "GET",
-                url: `/send_date/${dayoffset}`,
+                url: `/send_date/${today}`,
                 success: function (response) {
                     // 응답으로 받은 HTML을 전체 문서로 대체
                     document.open();
@@ -413,12 +413,12 @@
 
             <div class="date-group">
                 <span class="icon">
-                    <button class="fa-solid fa-caret-up" onclick="sendData('-1') "></button>
+                    <button class="fa-solid fa-caret-up" onclick="sendData('{{yesterday}}') "></button>
                 </span>
                 <h3 id="current_date" class="subtitle is-3" style="margin-bottom: 0px;">{{currentdate}}
                 </h3>
                 <span class="icon">
-                    <button class="fa-solid fa-caret-down" onclick="sendData('1') "></button>
+                    <button class="fa-solid fa-caret-down" onclick="sendData('{{tomorrow}}') "></button>
                 </span>
             </div>
         </div>
