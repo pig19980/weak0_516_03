@@ -155,8 +155,7 @@ def logincheck():
     if check is None:
         # 로그인 실패
         print("로그인 실패")
-        return jsonify({'result': 'fail', 'message': 'Invalid credentials'}), 401
-
+        return render_template("login.html", message="가입된 회원이 아닙니다.")
     else:  
         # 로그인 성공
         print("로그인 성공")
