@@ -181,7 +181,7 @@ def index():
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         return render_template(
-            "index_2.html",
+            "index.html",
             token=token,
             user_id=payload["user_id"],
             user_name=payload["user_name"],
@@ -282,18 +282,14 @@ def addLikes():
     print(f'user : {user_id} ,  post : {post_id} ,   likes : {likes} , ')
 
 # post_id 로 게시글 찾아와서 좋아요 업데이트 하기 
-    try:
-        db.users.update_one({'_id':post_id},{'$set':{'likes':likes}})
+    # try:
+    db.posts.update_one({'_id':ObjectId(post_id)},{'$set':{'likes':likes}})
 
 
-        response = redirect(url_for("index"))
-        return response
-    except:
-        return jsonify({"error": "DB 수정실패"})
-
-
-        
-
+    response = redirect(url_for("index"))
+    return response
+    # except:
+    #     return jsonify({"error": "DB 수정실패"})
 
 
 
