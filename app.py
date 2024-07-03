@@ -17,7 +17,7 @@ from datetime import timedelta
 app = Flask(__name__)
 SECRET_KEY = "jungle_3"  # 토큰을 암호화할 key 세팅
 # db connection
-client = MongoClient("localhost", 27017)
+client = MongoClient('mongodb://test:test@54.180.237.110/?authSource=admin', 27017)
 db = client.dbjungle
 fs = gridfs.GridFS(db)
 
@@ -489,4 +489,4 @@ def sort_articles(sortparam):
     
 if __name__ == "__main__":
     print(sys.executable)
-    app.run("0.0.0.0", port=5001, debug=True)
+    app.run("0.0.0.0", port=5000, debug=True)
