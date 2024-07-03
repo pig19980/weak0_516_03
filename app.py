@@ -2,10 +2,7 @@ from bson import ObjectId
 from pymongo import MongoClient
 from flask import Flask, render_template, jsonify, request, redirect, url_for, send_file
 from flask.json.provider import JSONProvider
-
 import requests
-
-
 import gridfs
 import io
 import json
@@ -176,7 +173,6 @@ def index():
             articledatas=updateFeedContents(),
         )
     # token이 만료 되었을때
-
     except jwt.ExpiredSignatureError:
         return "로그인이 만료되었습니다. 다시 로그인 해주세요"
     # token이 없을때
@@ -240,8 +236,8 @@ def send_image(figure_id):
             as_attachment=True,
             download_name=file.filename,
         )
-    except gridfs.NoFile:
-        return jsonify({"error": "File not found"}), 404
+    except (gridfs.NoFile, Exception) as e:
+        return send_default_image()
 
 
 def send_default_image():
