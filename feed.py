@@ -86,7 +86,9 @@ def updateFeedContents(now):
     next_day = now + timedelta(days=1)
     maxnow = next_day.strftime("%Y%m%d00000000")
 
+    print("NOW")
     print(minnow)
+    
     # DB Search
     todayCardDB = list(db.posts.find({"created_at": {"$gte": minnow, "$lt": maxnow}}))
     for card in todayCardDB:
@@ -195,10 +197,11 @@ def index():
         
         # 변수 파일에서 현재 날짜를 로드
         variable = load_variable_from_file()
-        now = variable.get('currenttime', datetime.datetime.now())
+        now_str = variable.get('currentdate', datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
+        now = datetime.datetime.strptime(now_str, "%Y-%m-%dT%H:%M:%S")
 
         return render_template(
-            "index.html",
+            "feed.html", 
             token=token,
             user_id=payload["user_id"],
             user_pw=payload["user_pw"],
@@ -257,7 +260,7 @@ def send_image(figure_id):
     # print(row)
     # print(figure_id)
     # figure_id가 'null' 문자열이거나 비어 있는 경우 디폴트 이미지 반환
-    if figure_id == "null" or figure_id.strip() == "":
+    if figure_id == 'null' or figure_id.strip() == '':
         return send_default_image()
     try:
         file = fs.get(ObjectId(figure_id))
@@ -269,25 +272,24 @@ def send_image(figure_id):
             as_attachment=True,
             download_name=file.filename,
         )
-    except gridfs.NoFile:
-        return jsonify({"error": "File not found"}), 404
-
-
+    except (gridfs.NoFile, Exception) as e:
+        return send_default_image()
+    
 def send_default_image():
-    default_image_url = "https://jungle-compass.krafton.com/pluginfile.php/1/theme_moove/logo/1705035087/jungle_big.png"  # 디폴트 이미지 경로
+    default_image_url = 'https://jungle-compass.krafton.com/pluginfile.php/1/theme_moove/logo/1705035087/jungle_big.png'  # 디폴트 이미지 경로
     response = requests.get(default_image_url)
     if response.status_code == 200:
-        default_mime_type = response.headers.get("Content-Type", "image/png")
+        default_mime_type = response.headers.get('Content-Type', 'image/png')
         return send_file(
             io.BytesIO(response.content),
             mimetype=default_mime_type,
             as_attachment=True,
-            download_name="default_image.png",
+            download_name='default_image.png',
         )
     else:
         return jsonify({"error": "Default image not found"}), 404
 
-@app.route("/index/send_date/<dayoffset>")
+@app.route("/send_date/<dayoffset>")
 def send_date(dayoffset):
     token = request.cookies.get('token')  # 토큰을 저장할때 쓴 키값
 
@@ -296,8 +298,9 @@ def send_date(dayoffset):
 
         # 변수 파일에서 현재 날짜를 로드
         variable = load_variable_from_file()
-        now = variable.get('currenttime', datetime.datetime.now())
-
+        now_str = variable.get('currentdate', datetime.datetime.now())
+        now = datetime.datetime.strptime(now_str, "%Y-%m-%dT%H:%M:%S")
+        
         if dayoffset == '1':
             now = now + timedelta(days=1)
         elif dayoffset == '-1':
@@ -305,11 +308,17 @@ def send_date(dayoffset):
         else:
             now = now
 
-        save_variable_to_file({'currenttime': now})
+        save_variable_to_file({'currentdate': now.strftime("%Y-%m-%dT%H:%M:%S")})
 
         payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
         articledatas = updateFeedContents(now)
-        return render_template('index.html', token=token, user_id=payload['user_id'], user_pw=payload['user_pw'], articledatas=articledatas, currentdate=now.strftime("%Y-%m-%d"))
+        return render_template(
+            "feed.html", 
+            token=token, 
+            user_id=payload['user_id'], 
+            user_pw=payload['user_pw'], 
+            articledatas=articledatas, 
+            currentdate=now.strftime("%Y-%m-%d"))
     except jwt.ExpiredSignatureError:
         return '로그인이 만료되었습니다. 다시 로그인 해주세요'
     except jwt.exceptions.DecodeError:
