@@ -144,9 +144,9 @@ app.json = CustomJSONProvider(app)
 def login():
     message = request.args.get('message')
     if message is None:
-        return render_template("login.html")
+        return render_template("login_test.html")
     else:
-        return render_template("login.html", message=message)
+        return render_template("login_test.html", message=message)
     
 
 

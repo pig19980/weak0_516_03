@@ -153,6 +153,7 @@ def logincheck():
         payload = {
             "user_id": user_data["user_id"],
             "user_pw": user_data["user_pw"],
+            "user_name" : check["user_name"]
         }
         # 토큰을 발급한다.
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
@@ -172,7 +173,7 @@ def index():
             "index.html",
             token=token,
             user_id=payload["user_id"],
-            user_pw=payload["user_pw"],
+            user_name=payload["user_name"],
             articledatas=updateFeedContents(),
         )
     # token이 만료 되었을때
@@ -240,8 +241,8 @@ def send_image(figure_id):
             as_attachment=True,
             download_name=file.filename,
         )
-    except gridfs.NoFile:
-        return jsonify({"error": "File not found"}), 404
+    except (gridfs.NoFile,Exception) as e:
+        return send_default_image()
 
 
 def send_default_image():

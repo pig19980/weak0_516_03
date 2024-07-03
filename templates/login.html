@@ -6,9 +6,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Bootstrap CSS -->
-    <!-- CSS library 인 Bulma 를 포함합니다. -->
+    <!-- Bulma CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css" />
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <!-- Optional JavaScript -->
     <!-- jQuery and Bootstrap Bundle (includes Popper) -->
@@ -21,35 +23,48 @@
 
     <title>크래프톤 정글 | 미니 프로젝트 | 로그인 페이지</title>
 
-
-
-
-
-
     <style>
-        /* class : .   id : #  일반 태그는 아무것도 없이   form 은 id 로 하기*/
-        hr {
-            border: 2px solid #ccc;
-            margin: 50px auto;
-            /* 수평선 위아래 여백 설정 */
-            width: 50%;
+        /* . : class    # :id     */
+        body {
+            background-image: url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDR8fGVkdWNhdGlvbnxlbnwwfHx8fDE2NDY5MDA5MDQ&ixlib=rb-1.2.1&q=80&w=1080');
+            background-size: contain;
+            background-position: center;
+            font-family: Arial, sans-serif;
+            margin-top:7%;
         }
 
-        .loginform {
-            width: 50%;
-            margin: auto;
-            margin-top: 4%;
+        .container {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .column {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .loginform,
+        .regiform {
+            width: 100%;
         }
 
         .align-center {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            text-align: center;
+            margin: 0;
         }
 
         #submit {
             margin: auto;
-            width: 100px;
+            width: 100%;
         }
 
         .inputstyle {
@@ -57,28 +72,44 @@
             padding: 10px;
             border: none;
             border-bottom: 3px solid #000;
-            /* Change the color as needed */
             background: transparent;
             font-size: 16px;
             outline: none;
             box-sizing: border-box;
         }
+
+        p {
+            font: italic small-caps bold 40px/2 cursive;
+            margin-bottom: 15px;
+        }
+
+        #centering {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 
-
-
     <script>
-        function openClose() {
-            if ($("#status").css("display") == "block") {
-                $("#status").hide();
+        function openClose(tab) {
+            var regi_status = document.getElementById("registatus");
+            var login_status = document.getElementById("loginstatus");
+            var login_tab = document.getElementById("login-tab");
+            var register_tab = document.getElementById("register-tab");
+
+            if (tab === 'register') {
+                regi_status.style.display = "block";
+                login_status.style.display = "none";
+                login_tab.classList.remove("is-active");
+                register_tab.classList.add("is-active");
             } else {
-                $("#status").show();
+                regi_status.style.display = "none";
+                login_status.style.display = "block";
+                login_tab.classList.add("is-active");
+                register_tab.classList.remove("is-active");
             }
         }
 
-
-
-        // 페이지가 로드될 때 alert를 표시하는 함수
         window.onload = function () {
             const message = "{{ message }}";
             if (message) {
@@ -86,53 +117,64 @@
             }
         };
     </script>
-
-
-
 </head>
 
-
-
-
-
-
-
 <body>
-
     <div class="container">
-        <h1> 안녕, 정글러 ! </h1>
-        <div class="notification has-text-primary-50" style="width: 65%; margin: auto;">
+        <div class="row">
+            <img src="static/login.jpeg" width="40%" height="40%" style="border-radius: 15%;">
 
-            <div class="loginform" id="loginform">
-                <form action="/login/logincheck" method="post">
-                    아이디 :<br />
-                    <input class="input inputstyle" name="user_id" type="text" /><br /><br />
-                    비밀번호 : <br />
-                    <input class="input inputstyle" name="user_pw" type="password" /><br /><br /><br />
-                    <div id="submit"><input id="submit" type="submit" value="로그인"></div>
-                </form>
+
+
+            <div class="column">
+
+                <div class="loginform" id="loginform">
+                    <p class="align-center">Hello, Jungler! </p>
+
+
+                    <div class="tabs is-centered">
+                        <ul>
+                            <li id="login-tab" class="is-active"><a href="#" style="font-weight: bold;" onclick="openClose('login')">로그인</a></li>
+                            <li id="register-tab"><a href="#" style="font-weight: bold;"  onclick="openClose('register')">회원가입</a></li>
+                        </ul>
+                    </div>
+
+                    <div id="loginstatus">
+                        <form action="/login/logincheck" method="post">
+                            <b>아이디 :</b><br />
+                            <input class="input inputstyle" name="user_id" type="text"  /><br /><br />
+                            <b>비밀번호 :<br />
+                            <input class="input inputstyle" name="user_pw" type="password" /><br /><br /><br />
+                            <div id="submit"><input id="submit" class="button is-link is-rounded" type="submit"
+                                    value="로그인">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- <button class="button is-text" style="color: blue; margin-top: 10px; " onclick="openClose()">계정 만들고
+                    시작하기</button><br /> -->
+                <div class="regiform">
+                    <div id="registatus" style="display:none">
+                        <form action="/login/register" method="post" class="loginform">
+                            <input class="input" name="regi_id" type="text" placeholder="아이디를 입력하세요." /><br /><br />
+                            <input class="input" name="regi_pw" type="password"
+                                placeholder="비밀번호를 입력하세요." /><br /><br />
+                            <input class="input" name="regi_pw2" type="password"
+                                placeholder="비밀번호를 다시 입력하세요." /><br /><br />
+                            <input class="input" name="regi_name" type="text"
+                                placeholder="이름을 입력하세요." /><br /><br /><br />
+                            <div id="submit"><input id="submit" class="button is-link is-rounded" type="submit"
+                                    value="회원가입"></div>
+                        </form>
+                    </div>
+                </div>
+
             </div>
-
-            <hr>
-            <button class="button is-text loginform align-center" onclick="openClose()">계정 만들고 시작하기</button><br />
-
-
-
-
-            <div id="status" style="display:none">
-                <form action="/login/register" method="post" class="loginform">
-                    <input class="input" name="regi_id" type="text" placeholder="아이디를 입력하세요." /><br /><br />
-                    <input class="input" name="regi_pw" type="password" placeholder="비밀번호를 입력하세요." /><br /><br />
-                    <input class="input" name="regi_pw2" type="password" placeholder="비밀번호를 다시 입력하세요." /><br /><br />
-                    <input class="input" name="regi_name" type="text" placeholder="이름을 입력하세요." /><br /><br /><br />
-                    <div id="submit"><input id="submit" type="submit" value="회원가입"></div>
-                </form>
-            </div>
-
 
         </div>
+        <hr>
     </div>
-
 
 </body>
 
