@@ -12,6 +12,7 @@ let modify_editors = {};
         mode: "javascript"
     });
     temp_editor.setSize(null, 300);
+    console.log(temp_editor);
     modify_editors[$textarea.dataset.targetid] = temp_editor;
 });
 
@@ -90,7 +91,7 @@ fileChanges.each((index, $fileChange) => {
             const newImg = $(`#modal-js-modify-${target_id} > div.modal-card > section > figure`);
             fileName.text(file.name);
     
-            newImg.find("img").attr("src", URL.createObjectURL(file)).attr("id", "before-uploading");
+            newImg.find("img").attr("src", URL.createObjectURL(file)).attr("id", `modify-img-${target_id}`);
     
             newImg.append(
                 `<button class="delete" aria-label="close" onclick="CancleModify('${target_id}')"></button>`

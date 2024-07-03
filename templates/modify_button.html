@@ -193,12 +193,7 @@
             formData.append("code", editor.getValue());
             formData.append("user_id", "{{user_id}}")
             console.log("{{user_id}}")
-            // for (let key of formData.keys()) {
-            // 	console.log(key);
-            // }
-            // for (let value of formData.values()) {
-            // 	console.log(value);
-            // }
+            
             $.ajax({
                 type: 'POST',
                 url: '/writeArticle',
@@ -208,6 +203,9 @@
                 success: function (result) {
                     alert("Uploaded");
                     window.location.reload();
+                },
+                error: function(xhr, ajaxSetting, thrownError) {
+                    alert("업로드 실패");
                 }
             })
            
@@ -229,9 +227,35 @@
         }
 
 
-        function ModifyArticle() {
-            const fileInput = $("#file-js-upload input[type=file]");
+        function ModifyArticle(target_id) {
+            const originTitle = $(`#card-${target_id} .title.is-3`).text();
+            const originLearned = $(`#card-${target_id} .learned`).text();
+            const originCode = $(`#card-${target_id} > pre > code`).text();
+            const originImgSrc = $(`#post-img-${target_id}`).prop('src');
 
+            const changedTitle = $(`#modify-title-${target_id}`).val();
+            const changedLearned = $(`#modify-learned-${target_id}`).val();
+            const changedCode = modify_editors[target_id].getValue();
+            const changedImgSrc = $(`#modify-img-${target_id}`).prop('src');
+
+            console.log(originTitle, originLearned, originCode, originImgSrc);
+            console.log(changedTitle, changedLearned, changedCode, changedImgSrc);
+            console.log(changedLearned)
+            if (originTitle == changedTitle &&
+                originLearned == changedLearned &&
+                originCode ==changedCode &&
+                (originImgSrc == changedImgSrc
+                    || changedImgSrc == undefined
+                )){
+                alert("변경 사항이 없습니다.");
+                return;
+            }
+            if (changedTitle == '' || changedLearned == '') {
+                alert("제목이나 내용이 없습니다.");
+                return;
+            }
+
+            const fileInput = $(`#file-js-modify-${target_id} input[type=file]`);
             var formData = new FormData();
             let files = fileInput[0].files;
             if (files.length > 0) {
@@ -239,31 +263,23 @@
                 formData.append("figure", files[0]);
             }
 
-            if ($("#upload-title").val() == '' || $("#upload-learned").val() == '') {
-                alert("제목이나 내용이 없습니다.");
-                return;
-            }
-
-            formData.append("title", $("#upload-title").val());
-            formData.append("learned", $("#upload-learned").val());
-            formData.append("code", editor.getValue());
+            formData.append("title", changedTitle);
+            formData.append("learned", changedLearned);
+            formData.append("code", changedCode);
             formData.append("user_id", "{{user_id}}")
-            console.log("{{user_id}}")
-            // for (let key of formData.keys()) {
-            // 	console.log(key);
-            // }
-            // for (let value of formData.values()) {
-            // 	console.log(value);
-            // }
+            
             $.ajax({
                 type: 'POST',
-                url: '/writeArticle',
+                url: '/modifyArticle',
                 data: formData,
                 processData: false,
                 contentType: false,
                 success: function (result) {
-                    alert("Uploaded");
+                    alert("Modyfied");
                     window.location.reload();
+                },
+                error: function(xhr, ajaxSetting, thrownError) {
+                    alert("업로드 실패");
                 }
             })
            
@@ -357,7 +373,7 @@
                 <ul>
                     {% for articledata in articledatas %}
                     <li>
-                        <div class="card" style="margin-bottom: 70px;">
+                        <div class="card" style="margin-bottom: 70px;" id="card-{{ articledata.post_id }}">
                             <div class="media" style="margin-bottom: 0px;">
                                 <p class="title is-4" style="margin-bottom: 0px;">{{ articledata.userName }}의
                                     {{articledata.month}}월 {{articledata.day}}일</p>
@@ -371,17 +387,12 @@
                                 <img src="http://127.0.0.1:5001/img/{{ articledata.figure_id }}"
                                     alt="Placeholder image" id="post-img-{{ articledata.post_id }}"></img>
                             </figure>
-                            <div class="learned">
-                                {{articledata.learned}}
-                            </div>
+                            <div class="learned">{{articledata.learned}}</div>
 
                             <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css"
                                 rel="stylesheet" />
                             <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
 
-                            <pre><code class="code">
-                            {{articledata.code}}
-                            </code></pre>
                             <pre><code class="language-javascript">{{ articledata.code }}</code></pre>
 
 
@@ -408,7 +419,7 @@
                                 <section class="modal-card-body">
 
                                     <figure class="image">
-                                        <img src="http://127.0.0.1:5001/img/{{ articledata.figure_id }}" id="insert-photo" />
+                                        <img src="http://127.0.0.1:5001/img/{{ articledata.figure_id }}" id="modify-img-{{ articledata.post_id }}" />
                                     </figure>
                     
                                     <div id="file-js-modify-{{ articledata.post_id }}" class="file has-name">
@@ -436,7 +447,7 @@
                                 </section>
                                 <footer class="modal-card-foot">
                                     <div class="buttons">
-                                        <button class="button is-success" onclick="UploadArticle()">Save changes</button>
+                                        <button class="button is-success" onclick="ModifyArticle('{{ articledata.post_id }}')">Save changes</button>
                                         <button class="button">Cancel</button>
                                     </div>
                                 </footer>
