@@ -237,30 +237,39 @@ def modify_article():
     title = request.form["title"]
     learned = request.form["learned"]
     code = request.form["code"]
-    if "figure" not in request.files:
-        print("no fig")
-        figure_id = None
-    else:
+    post_id = request.form["post_id"]
+
+    # html 변조로 남의 것을 수정한 것이 아닌지 확인 해야함
+    user_id = request.form["user_id"]
+
+    print(db.posts.find_one({"_id": ObjectId(post_id)}))
+    if db.posts.find_one({"_id": ObjectId(post_id)})["user_id"] != user_id:
+        print("not matching")
+        print(db.posts.find_one({"_id": ObjectId(post_id)})["user_id"], user_id)
+        return jsonify({"result": "fail"})
+
+    db.posts.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$set": {"title": title, "learned": learned, "code": code}},
+    )
+
+    if "figure" in request.files:
+        # 이전 figure 삭제
+        before_figure_id = db.posts.find_one({"_id": ObjectId(post_id)})["figure_id"]
+        ret = fs.delete(ObjectId(before_figure_id))
+        print("deleting file ret", ret)
+
+        # 새로운 figure 추가
         print("yes fig")
         figure = request.files["figure"]
         print(figure.filename)
         figure_id = fs.put(
             figure.read(), filename=figure.filename, content_type=figure.content_type
         )
-    print(title, learned, code, figure_id)
-    post = {
-        "figure_id": figure_id,
-        "u_name": db.users.find_one({"user_id": request.form["user_id"]})["user_name"],
-        "user_id": request.form["user_id"],
-        "title": title,
-        "likes": 0,
-        "learned": learned,
-        "code": code,
-        "created_at": datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
-    }
-    print(post)
-    # 3. mongoDB에 데이터를 넣기
-    db.posts.insert_one(post)
+        db.posts.update_one(
+            {"_id": ObjectId(post_id)}, {"$set": {"figure_id": figure_id}}
+        )
+
     return jsonify({"result": "success"})
 
 
