@@ -26,7 +26,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism.min.css" rel="stylesheet" />
 
 
-    <title>오늘 하루 어땟니? | 정글에서의 하루 공유하기</title>
+    <title>오늘 하루 어땠니? | 정글에서의 하루 공유하기</title>
 
     <!-- 이 HTML 안에서 사용할 CSS 를 정의합니다. -->
     <!-- . 으로 시작하는 단어는 CSS clas 에 해당하며 . 을 제외한 이름을 HTML tag 에서 class="..." 형태로 사용합니다. -->
@@ -63,13 +63,6 @@
             display: flex;
             align-items: center;
             /* 아이콘을 중앙에 정렬 */
-        }
-
-
-        .buttongroup {
-            display: flex;
-            justify-content: space-between;
-            gap: 5px;
         }
 
         #add-post-button {
@@ -160,7 +153,7 @@
 
     <script>
 
-function sendData(dayoffset) {
+        function sendData(dayoffset) {
             $.ajax({
                 type: "GET",
                 url: `/send_date/${dayoffset}`,
@@ -176,38 +169,26 @@ function sendData(dayoffset) {
             });
         }
 
-
-        // 페이지 로드 시 현재 날짜 표시
-        window.onload = function () {
-            updateDateDisplay();
-        };
-
-        const daysOfWeek = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
-        let currentDate = new Date();
-
-        function updateDateDisplay() {
-            const dayName = daysOfWeek[currentDate.getDay()];
-            document.getElementById("current_date").innerHTML = `${dayName}, ${currentDate.toLocaleDateString()}`;
+        function sorterArticle(sortparam) {
+            $.ajax({
+                type: "GET",
+                url: `/sorter/${sortparam}`,
+                success: function (response) {
+                    // 응답으로 받은 HTML을 전체 문서로 대체
+                    document.open();
+                    document.write(response);
+                    document.close();
+                },
+                error: function (xht) {
+                    alert('An error occurred: ' + xhr.responseText)
+                }
+            })
         }
-
-        function goYesterdayBtn() {
-            currentDate.setDate(currentDate.getDate() - 1);
-            updateDateDisplay();
-
-            //DB에서 다시 불러오기
-        }
-
-        function goTomorrowBtn() {
-            currentDate.setDate(currentDate.getDate() + 1);
-            updateDateDisplay();
-            //DB에서 다시 불러오기
-        }
-
 
         function cancleUpload() {
-            const fileName = $("#file-js-upload .file-name");
-            const newImg = $("#modal-js-writing > div.modal-card > section > figure");
-            const fileInput = $("#file-js-upload input[type=file]");
+            var fileName = $("#file-js-upload .file-name");
+            var newImg = $("#modal-js-writing > div.modal-card > section > figure");
+            var fileInput = $("#file-js-upload input[type=file]");
 
             fileInput.val('')
             fileName.text("사진이 선택되지 않았습니다.");
@@ -217,12 +198,11 @@ function sendData(dayoffset) {
         }
 
         function UploadArticle() {
-            const fileInput = $("#file-js-upload input[type=file]");
+            var fileInput = $("#file-js-upload input[type=file]");
 
             var formData = new FormData();
             let files = fileInput[0].files;
             if (files.length > 0) {
-                console.log("figure appended");
                 formData.append("figure", files[0]);
             }
 
@@ -235,8 +215,7 @@ function sendData(dayoffset) {
             formData.append("learned", $("#upload-learned").val());
             formData.append("code", editor.getValue());
             formData.append("user_id", "{{user_id}}")
-            console.log("{{user_id}}")
-            
+
             $.ajax({
                 type: 'POST',
                 url: '/writeArticle',
@@ -247,24 +226,22 @@ function sendData(dayoffset) {
                     alert("Uploaded");
                     window.location.reload();
                 },
-                error: function(xhr, ajaxSetting, thrownError) {
+                error: function (xhr, ajaxSetting, thrownError) {
                     alert("업로드 실패");
                 }
             })
-           
+
         }
 
         function CancleModify(target_id) {
-            const fileName = $(`#file-js-modify-${target_id} .file-name`);
-            const newImg = $(`#modal-js-modify-${target_id} > div.modal-card > section > figure`);
+            var fileName = $(`#file-js-modify-${target_id} .file-name`);
+            var newImg = $(`#modal-js-modify-${target_id} > div.modal-card > section > figure`);
             const fileInput = $(`#file-js-modify-${target_id} input[type=file]`);
 
             fileInput.val('')
             fileName.text("사진이 선택되지 않았습니다.");
-            
-            const originImgSrc = $(`#post-img-${target_id}`).prop('src');
-            console.log(originImgSrc)
 
+            const originImgSrc = $(`#post-img-${target_id}`).prop('src');
             newImg.find("img").attr("src", originImgSrc).attr("id", "insert-photo");
             newImg.find("button").remove();
         }
@@ -305,7 +282,9 @@ function sendData(dayoffset) {
                 contentType: false,
                 success: function (result) {
                     // alert("좋아요 업데이트 완료");
-                    window.location.reload();  // 페이지 새로고침
+                    document.open();
+                    document.write(result["result"]);
+                    document.close();
                 },
                 error: function (error) {
                     console.error('좋아요 업데이트 에러:', error);
@@ -326,9 +305,6 @@ function sendData(dayoffset) {
             const changedCode = modify_editors[target_id].getValue();
             const changedImgSrc = $(`#modify-img-${target_id}`).prop('src');
 
-            console.log(originTitle, originLearned, originCode, originImgSrc);
-            console.log(changedTitle, changedLearned, changedCode, changedImgSrc);
-            console.log(changedLearned)
             if (originTitle == changedTitle &&
                 originLearned == changedLearned &&
                 originCode == changedCode &&
@@ -343,11 +319,10 @@ function sendData(dayoffset) {
                 return;
             }
 
-            const fileInput = $(`#file-js-modify-${target_id} input[type=file]`);
+            var fileInput = $(`#file-js-modify-${target_id} input[type=file]`);
             var formData = new FormData();
             let files = fileInput[0].files;
             if (files.length > 0) {
-                console.log("figure appended");
                 formData.append("figure", files[0]);
             }
 
@@ -356,7 +331,7 @@ function sendData(dayoffset) {
             formData.append("code", changedCode);
             formData.append("user_id", "{{user_id}}");
             formData.append("post_id", target_id);
-            
+
             $.ajax({
                 type: 'POST',
                 url: '/modifyArticle',
@@ -364,14 +339,16 @@ function sendData(dayoffset) {
                 processData: false,
                 contentType: false,
                 success: function (result) {
-                    alert("Modyfied");
-                    window.location.reload();
+                    document.open();
+                    document.write(result["result"]);
+                    document.close();
+
                 },
                 error: function (xhr, ajaxSetting, thrownError) {
                     alert("업로드 실패");
                 }
             })
-           
+
         }
 
     </script>
@@ -432,7 +409,7 @@ function sendData(dayoffset) {
     <div class="columns">
         <!-- title -->
         <div id="title-group" class="column has-background-grey-light">
-            <h1 class="title is-3">오늘 하루 어땟니 ?</h1>
+            <h1 class="title is-3">오늘 하루 어땠니 ?</h1>
 
             <div class="date-group">
                 <span class="icon">
@@ -448,8 +425,8 @@ function sendData(dayoffset) {
         <!-- feed -->
         <div class="column is-6">
             <div class="buttongroup" style="margin-bottom: 50px; margin-top: 10px;">
-                <button class="button is-small is-link is-rounded">최신순</button>
-                <button class="button is-small is-primary is-rounded">인기순</button>
+                <button class="button is-small is-link is-rounded" onclick="sorterArticle('NEW')">최신순</button>
+                <button class="button is-small is-primary is-rounded" onclick="sorterArticle('LIKES')">인기순</button>
                 <button class="js-modal-trigger button is-white is-pulled-right" data-target="modal-js-writing">
                     <i class="fa-solid fa-circle-plus"></i>
                 </button>
@@ -464,9 +441,9 @@ function sendData(dayoffset) {
                             <div class="media" style="margin-bottom: 0px;">
                                 <p class="title is-4" style="margin-bottom: 0px;">{{ articledata.userName }}의
                                     {{articledata.month}}월 {{articledata.day}}일</p>
-                                    <span id="thumb-up" class="right-button"><button class="fa-solid fa-thumbs-up "
-                                            onclick="addlikes('{{ articledata.post_id}}','{{articledata.likes}}')"></button>
-                                        <span id="likenum">{{articledata.likes}}</span></span>
+                                <span id="thumb-up" class="right-button"><button class="fa-solid fa-thumbs-up "
+                                        onclick="addlikes('{{ articledata.post_id}}','{{articledata.likes}}')"></button>
+                                    <span id="likenum">{{articledata.likes}}</span></span>
                             </div>
                             <hr style="margin-top: 0px;">
                             <h1 id="align-center" class="title is-3">{{ articledata.title}}</h1>
@@ -562,7 +539,7 @@ function sendData(dayoffset) {
                     {% endfor %}
                 </ul>
 
-                
+
             </div>
 
         </div>
@@ -596,7 +573,7 @@ function sendData(dayoffset) {
             });
         });
     </script>
-    
+
     <script src="{{ url_for('static', filename='addEventListener.js') }}"></script>
 </body>
 
