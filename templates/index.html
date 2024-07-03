@@ -58,19 +58,13 @@
             gap: 10px;
             /* 아이템 사이의 간격 조절 (원하는 대로 조정 가능) */
         }
-
+        
         .date-group .icon {
             display: flex;
             align-items: center;
             /* 아이콘을 중앙에 정렬 */
         }
 
-
-        .buttongroup {
-            display: flex;
-            justify-content: space-between;
-            gap: 5px;
-        }
 
         #add-post-button {
             font-size: 24px;
@@ -159,31 +153,23 @@
     </style>
 
     <script>
-        // 페이지 로드 시 현재 날짜 표시
-        window.onload = function () {
-            updateDateDisplay();
-        };
 
-        const daysOfWeek = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
-        let currentDate = new Date();
-
-        function updateDateDisplay() {
-            const dayName = daysOfWeek[currentDate.getDay()];
-            document.getElementById("current_date").innerHTML = `${dayName}, ${currentDate.toLocaleDateString()}`;
+        function sendData(dayoffset) {
+            $.ajax({
+                type: "GET",
+                url: `/send_date/${dayoffset}`,
+                success: function (response) {
+                    // 응답으로 받은 HTML을 전체 문서로 대체
+                    document.open();
+                    document.write(response);
+                    document.close();
+                },
+                error: function (xhr) {
+                    alert('An error occurred: ' + xhr.responseText);
+                }
+            });
         }
 
-        function goYesterdayBtn() {
-            currentDate.setDate(currentDate.getDate() - 1);
-            updateDateDisplay();
-
-            //DB에서 다시 불러오기
-        }
-
-        function goTomorrowBtn() {
-            currentDate.setDate(currentDate.getDate() + 1);
-            updateDateDisplay();
-            //DB에서 다시 불러오기
-        }
 
 
         function cancleUpload() {
@@ -218,7 +204,12 @@
             formData.append("code", editor.getValue());
             formData.append("user_id", "{{user_id}}")
             console.log("{{user_id}}")
-            
+            // for (let key of formData.keys()) {
+            // 	console.log(key);
+            // }
+            // for (let value of formData.values()) {
+            // 	console.log(value);
+            // }
             $.ajax({
                 type: 'POST',
                 url: '/writeArticle',
@@ -228,130 +219,23 @@
                 success: function (result) {
                     alert("Uploaded");
                     window.location.reload();
-                },
-                error: function(xhr, ajaxSetting, thrownError) {
-                    alert("업로드 실패");
                 }
             })
-           
+
+
+
+            // window.location.reload();
         }
 
-        function CancleModify(target_id) {
-            const fileName = $(`#file-js-modify-${target_id} .file-name`);
-            const newImg = $(`#modal-js-modify-${target_id} > div.modal-card > section > figure`);
-            const fileInput = $(`#file-js-modify-${target_id} input[type=file]`);
 
-            fileInput.val('')
-            fileName.text("사진이 선택되지 않았습니다.");
-            
-            const originImgSrc = $(`#post-img-${target_id}`).prop('src');
-            console.log(originImgSrc)
 
-            newImg.find("img").attr("src", originImgSrc).attr("id", "insert-photo");
-            newImg.find("button").remove();
-        }
         function logout() {
 
             // console.log(document.cookie)
-            document.cookie =  'token=;';
+            document.cookie = 'token=;';
             // console.log(document.cookie)
             window.location.href = '/login';
-        }
 
-        function ModifyArticle(target_id) {
-            const originTitle = $(`#card-${target_id} .title.is-3`).text();
-            const originLearned = $(`#card-${target_id} .learned`).text();
-            const originCode = $(`#card-${target_id} > pre > code`).text();
-            const originImgSrc = $(`#post-img-${target_id}`).prop('src');
-
-            const changedTitle = $(`#modify-title-${target_id}`).val();
-            const changedLearned = $(`#modify-learned-${target_id}`).val();
-            const changedCode = modify_editors[target_id].getValue();
-            const changedImgSrc = $(`#modify-img-${target_id}`).prop('src');
-
-            console.log(originTitle, originLearned, originCode, originImgSrc);
-            console.log(changedTitle, changedLearned, changedCode, changedImgSrc);
-            console.log(changedLearned)
-            if (originTitle == changedTitle &&
-                originLearned == changedLearned &&
-                originCode ==changedCode &&
-                (originImgSrc == changedImgSrc
-                    || changedImgSrc == undefined
-                )){
-                alert("변경 사항이 없습니다.");
-                return;
-            }
-            if (changedTitle == '' || changedLearned == '') {
-                alert("제목이나 내용이 없습니다.");
-                return;
-            }
-
-            const fileInput = $(`#file-js-modify-${target_id} input[type=file]`);
-            var formData = new FormData();
-            let files = fileInput[0].files;
-            if (files.length > 0) {
-                console.log("figure appended");
-                formData.append("figure", files[0]);
-            }
-
-            formData.append("title", changedTitle);
-            formData.append("learned", changedLearned);
-            formData.append("code", changedCode);
-            formData.append("user_id", "{{user_id}}")
-            
-            $.ajax({
-                type: 'POST',
-                url: '/modifyArticle',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (result) {
-                    alert("Modyfied");
-                    window.location.reload();
-                },
-                error: function(xhr, ajaxSetting, thrownError) {
-                    alert("업로드 실패");
-                }
-            })
-
-        }
-
-        function addlikes() {
-            console.log("좋아요 눌림");
-
-            var likesnumber = document.getElementById("likenum");
-            var likesnum = parseInt(likesnumber.textContent);  // 좋아요 수를 정수로 변환
-            console.log("좋아요 수는? " + likesnum);
-
-            
-            var user_id = "{{user_id}}";  // 사용자 ID는 서버에서 적절히 가져오거나 설정해야 함
-            var post_id =  document.getElementById("post_ids")['value'];
-            console.log(post_id)
-            likesnum = likesnum + 1;  // 좋아요 수 증가
-
-            console.log("좋아요 수는? " + likesnum);
-
-            // FormData를 사용하여 데이터를 전달할 수 있도록 설정
-            var formData = new FormData();
-            formData.append('user_id', user_id);
-            formData.append('likesnum', likesnum);
-            formData.append('post_id', post_id);
-
-            $.ajax({
-                type: 'POST',
-                url: '/addLikes',
-                data: formData,  // FormData 객체 전달
-                processData: false,
-                contentType: false,
-                success: function (result) {
-                    // alert("좋아요 업데이트 완료");
-                    window.location.reload();  // 페이지 새로고침
-                },
-                error: function (error) {
-                    console.error('좋아요 업데이트 에러:', error);
-                    alert("좋아요 업데이트 중 오류가 발생했습니다.");
-                }
-            });
         }
 
     </script>
@@ -395,14 +279,14 @@
 
                 <textarea class="textarea" id="upload-learned" placeholder="오늘 만난 문제를 입력해주세요."></textarea>
                 <br>
-                <span>필요한 경우 코드를 입력해주세요.</span>
+                <span>필요한 경우 코드를 입력해주세요. 버그 때문에 10줄 이상 쓰면 원상복구 됩니다.</span>
                 <br>
                 <textarea class="textarea" id="upload-code" name="code"></textarea>
 
             </section>
             <footer class="modal-card-foot">
                 <div class="buttons">
-                    <button class="button is-success" onclick="UploadArticle()">Upload post</button>
+                    <button class="button is-success" onclick="UploadArticle()">Save changes</button>
                     <button class="button">Cancel</button>
                 </div>
             </footer>
@@ -416,23 +300,21 @@
 
             <div class="date-group">
                 <span class="icon">
-                    <button class="fa-solid fa-caret-up" onclick="goYesterdayBtn()"></button>
+                    <button class="fa-solid fa-caret-up" onclick="sendData('-1') "></button>
                 </span>
-                <h3 id="current_date" class="subtitle is-3" style="margin-bottom: 0px;">
+                <h3 id="current_date" class="subtitle is-3" style="margin-bottom: 0px;">{{currentdate}}
                 </h3>
                 <span class="icon">
-                    <button class="fa-solid fa-caret-down" onclick="goTomorrowBtn()"></button>
+                    <button class="fa-solid fa-caret-down" onclick="sendData('1') "></button>
                 </span>
             </div>
-
-
         </div>
         <!-- feed -->
         <div class="column is-6">
             <div class="buttongroup" style="margin-bottom: 50px; margin-top: 10px;">
                 <button class="button is-small is-link is-rounded">최신순</button>
                 <button class="button is-small is-primary is-rounded">인기순</button>
-                <button class="js-modal-trigger button is-white" data-target="modal-js-writing">
+                <button class="js-modal-trigger button is-white is-pulled-right" data-target="modal-js-writing">
                     <i class="fa-solid fa-circle-plus"></i>
                 </button>
             </div>
@@ -441,98 +323,32 @@
             <div class="mainfeed">
                 <ul>
                     {% for articledata in articledatas %}
-                    <li >
-                        <div class="card" style="margin-bottom: 70px;" id="card-{{ articledata.post_id }}">
+                    <li>
+                        <div class="card" style="margin-bottom: 70px;">
                             <div class="media" style="margin-bottom: 0px;">
                                 <p class="title is-4" style="margin-bottom: 0px;">{{ articledata.userName }}의
                                     {{articledata.month}}월 {{articledata.day}}일</p>
-                                    <span id="thumb-up" class="right-button"><button class="fa-solid fa-thumbs-up "
-                                        onclick="addlikes()"></button>
-                                    <span id="likenum">{{articledata.likes}}</span></span>
+                                <span id="thumb-up" class="right-button"><button
+                                        class="fa-solid fa-thumbs-up "></button>
+                                    <span>0</span></span>
                             </div>
                             <hr style="margin-top: 0px;">
-                            <input type="hidden" id="post_id" value="{{ articledata.post_id}}">
                             <h1 id="align-center" class="title is-3">{{ articledata.title}}</h1>
                             <figure id="align-center" class="card-image is-square">
                                 <img src="http://127.0.0.1:5001/img/{{ articledata.figure_id }}"
-                                    alt="Placeholder image" id="post-img-{{ articledata.post_id }}"></img>
+                                    alt="Placeholder image"></img>
                             </figure>
-                            <div class="learned">{{articledata.learned}}</div>
-                            <input type="hidden" id="post_ids" value="{{ articledata.post_id}}">{{ articledata.post_id}}
+                            <div class="learned">
+                                {{articledata.learned}}
+                            </div>
 
                             <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism.min.css"
                                 rel="stylesheet" />
                             <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
-
                             <pre><code class="language-javascript">{{ articledata.code }}</code></pre>
 
-
-                            {% if articledata.user_id == user_id %}
-                            <button class="button is-small is-primary is-rounded is-pulled-right js-modal-trigger" data-target="modal-js-modify-{{ articledata.post_id }}">수정하기</button>
-                            {% endif %}
+                            <button class="button is-small is-primary is-rounded is-pulled-right">수정하기</button>
                         </div>
-
-
-
-                        <!-- articledata에 user_id를 추가하고, articledata['user_id'] == user_id 를 확인할 필요가 있습니다. -->
-                        <!-- 위에 언급한 조건문이 수정하기 버튼에도 있다고 가정하고, 아래 modal도 조건문 안에 있다고 가정합니다. -->
-                        <!-- 또한, articledata에 그 포스트가 db에 가지는 id도 있다고 가정합니다. -->
-
-
-                        {% if articledata.user_id == user_id %}
-                        <div class="modal js-modify" id="modal-js-modify-{{ articledata.post_id }}">
-                            <div class="modal-background"></div>
-                            <div class="modal-card">
-                                <header class="modal-card-head">
-                                    <input class="input is-large" type="text" id="modify-title-{{ articledata.post_id }}" placeholder="제목을 입력하세요." value="{{ articledata.title }}"/>
-                                    <button class="delete" aria-label="close"></button>
-                                </header>
-                                <section class="modal-card-body">
-
-                                    <figure class="image">
-                                        <img src="http://127.0.0.1:5001/img/{{ articledata.figure_id }}" id="modify-img-{{ articledata.post_id }}" />
-                                    </figure>
-                                    <div id="file-js-modify-{{ articledata.post_id }}" class="file has-name">
-                                        <label class="file-label">
-                                            <input class="file-input" type="file" accept="image/*" name="resume" data-targetid="{{ articledata.post_id }}" />
-                                            <span class="file-cta">
-                                                <span class="file-icon">
-                                                    <i class="fas fa-upload"></i>
-                                                </span>
-                                                <span class="file-label"> Upload </span>
-                                            </span>
-                                            <br>
-                                            <br>
-                                            <span class="file-name"> 사진이 선택되지 않았습니다. </span>
-                                        </label>
-                                    </div>
-
-                    
-                                    <textarea class="textarea" id="modify-learned-{{ articledata.post_id }}" placeholder="오늘 만난 문제를 입력해주세요.">{{ articledata.learned }}</textarea>
-                                    <br>
-                                    <span>필요한 경우 코드를 입력해주세요.</span>
-                                    <br>
-                                    <textarea class="textarea modify-code" id="modify-code-{{ articledata.post_id }}" name="code" data-targetid="{{ articledata.post_id }}">{{ articledata.code }}</textarea>
-                    
-                                </section>
-                                <footer class="modal-card-foot">
-                                    <div class="buttons">
-                                        <button class="button is-success" onclick="ModifyArticle('{{ articledata.post_id }}')">Save changes</button>
-                                        <button class="button">Cancel</button>
-                                    </div>
-                                </footer>
-                            </div>
-                        </div>
-                        {% endif %}
-
-
-
-
-
-
-
-
-
                     </li>
                     {% endfor %}
                 </ul>
@@ -570,8 +386,85 @@
             });
         });
     </script>
-    
-    <script src="{{ url_for('static', filename='addEventListener.js') }}"></script>
+
+    <script>
+        // code editor part
+        var editor = CodeMirror.fromTextArea(document.getElementById("upload-code"), {
+            lineNumbers: true,
+            mode: "javascript"
+        });
+
+
+
+        // modal part
+        document.addEventListener('DOMContentLoaded', () => {
+            // Functions to open and close a modal
+            function openModal($el) {
+                $el.classList.add('is-active');
+            }
+
+            function closeModal($el) {
+                $el.classList.remove('is-active');
+            }
+
+            function closeAllModals() {
+                (document.querySelectorAll('.modal') || []).forEach(($modal) => {
+                    closeModal($modal);
+                });
+            }
+
+            // Add a click event on buttons to open a specific modal
+            (document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
+                const modal = $trigger.dataset.target;
+                const $target = document.getElementById(modal);
+
+                $trigger.addEventListener('click', () => {
+                    openModal($target);
+                });
+            });
+
+            // Add a click event on various child elements to close the parent modal
+            (document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach(($close) => {
+                const $target = $close.closest('.modal');
+
+                $close.addEventListener('click', () => {
+                    closeModal($target);
+                });
+            });
+
+            // Add a keyboard event to close all modals
+            document.addEventListener('keydown', (event) => {
+                if (event.key === "Escape") {
+                    closeAllModals();
+                }
+            });
+        });
+
+        // image upload part
+        const fileInput = document.querySelector("#file-js-upload input[type=file]");
+        console.log(fileInput.files);
+        fileInput.onchange = () => {
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileName = $("#file-js-upload .file-name");
+                const newImg = $("#modal-js-writing > div.modal-card > section > figure");
+                fileName.text(file.name);
+
+                newImg.find("img").attr("src", URL.createObjectURL(file)).attr("id", "before-uploading");
+
+                newImg.append(
+                    `<button class="delete" aria-label="close" onclick="cancleUpload()"></button>`
+                )
+                // const newCloseButton = document.createElement("button");
+                // newCloseButton.classList.add("delete");
+                // newCloseButton.setAttribute("aria-label", "close");
+                // newImg.appendChild(newCloseButton);
+
+            }
+        };
+
+
+    </script>
 </body>
 
 </html>
