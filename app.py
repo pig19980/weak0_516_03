@@ -36,27 +36,34 @@ class CustomJSONProvider(JSONProvider):
     def loads(self, s, **kwargs):
         return json.loads(s, **kwargs)
 
+
 # 변수 저장 및 읽기를 위한 파일 경로
-VARIABLE_FILE_PATH = 'variable.json'
+VARIABLE_FILE_PATH = "variable.json"
+
 
 def save_variable_to_file(variable):
-    with open(VARIABLE_FILE_PATH, 'w') as f:
+    with open(VARIABLE_FILE_PATH, "w") as f:
         # datetime 객체를 문자열로 변환하여 저장
-        if 'currenttime' in variable:
-            variable['currenttime'] = variable['currenttime'].strftime("%Y-%m-%dT%H:%M:%S")
+        if "currenttime" in variable:
+            variable["currenttime"] = variable["currenttime"].strftime(
+                "%Y-%m-%dT%H:%M:%S"
+            )
         json.dump(variable, f)
+
 
 def load_variable_from_file():
     try:
-        with open(VARIABLE_FILE_PATH, 'r') as f:
+        with open(VARIABLE_FILE_PATH, "r") as f:
             variable = json.load(f)
             # 문자열을 datetime 객체로 변환
-            if 'currenttime' in variable:
-                variable['currenttime'] = datetime.datetime.strptime(variable['currenttime'], "%Y-%m-%dT%H:%M:%S")
+            if "currenttime" in variable:
+                variable["currenttime"] = datetime.datetime.strptime(
+                    variable["currenttime"], "%Y-%m-%dT%H:%M:%S"
+                )
             return variable
     except FileNotFoundError:
         return {}
-    
+
 
 # 게시글 업로드
 # Card에 들어갈 콘텐츠 객체
@@ -98,7 +105,7 @@ def updateFeedContents(now):
 
     print("NOW")
     print(minnow)
-    
+
     # DB Search
     todayCardDB = list(db.posts.find({"created_at": {"$gte": minnow, "$lt": maxnow}}))
     for card in todayCardDB:
@@ -188,7 +195,7 @@ def logincheck():
         payload = {
             "user_id": user_data["user_id"],
             "user_pw": user_data["user_pw"],
-            "user_name" : check["user_name"]
+            "user_name": check["user_name"],
         }
         # 토큰을 발급한다.
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
@@ -206,19 +213,24 @@ def index():
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
 
         # 변수 파일에 dayoffset 저장
-        save_variable_to_file({'currentdate': datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")})
-        
+        save_variable_to_file(
+            {"currentdate": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")}
+        )
+
         # 변수 파일에서 현재 날짜를 로드
         variable = load_variable_from_file()
-        now_str = variable.get('currentdate', datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
+        now_str = variable.get(
+            "currentdate", datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        )
         now = datetime.datetime.strptime(now_str, "%Y-%m-%dT%H:%M:%S")
 
         return render_template(
-            "index.html", 
+            "index.html",
             token=token,
             user_id=payload["user_id"],
             user_pw=payload["user_pw"],
-            articledatas=updateFeedContents(now), currentdate = now.strftime("%Y-%m-%d"),
+            articledatas=updateFeedContents(now),
+            currentdate=now.strftime("%Y-%m-%d"),
         )
     # token이 만료 되었을때
     except jwt.ExpiredSignatureError:
@@ -263,6 +275,50 @@ def post_article():
     return jsonify({"result": "success"})
 
 
+# 할 일: uid를 find하고 db에 잘 저장하기
+# like초기화
+@app.route("/modifyArticle", methods=["POST"])
+def modify_article():
+    # 1. 클라이언트로부터 데이터를 받기
+    title = request.form["title"]
+    learned = request.form["learned"]
+    code = request.form["code"]
+    post_id = request.form["post_id"]
+
+    # html 변조로 남의 것을 수정한 것이 아닌지 확인 해야함
+    user_id = request.form["user_id"]
+
+    print(db.posts.find_one({"_id": ObjectId(post_id)}))
+    if db.posts.find_one({"_id": ObjectId(post_id)})["user_id"] != user_id:
+        print("not matching")
+        print(db.posts.find_one({"_id": ObjectId(post_id)})["user_id"], user_id)
+        return jsonify({"result": "fail"})
+
+    db.posts.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$set": {"title": title, "learned": learned, "code": code}},
+    )
+
+    if "figure" in request.files:
+        # 이전 figure 삭제
+        before_figure_id = db.posts.find_one({"_id": ObjectId(post_id)})["figure_id"]
+        ret = fs.delete(ObjectId(before_figure_id))
+        print("deleting file ret", ret)
+
+        # 새로운 figure 추가
+        print("yes fig")
+        figure = request.files["figure"]
+        print(figure.filename)
+        figure_id = fs.put(
+            figure.read(), filename=figure.filename, content_type=figure.content_type
+        )
+        db.posts.update_one(
+            {"_id": ObjectId(post_id)}, {"$set": {"figure_id": figure_id}}
+        )
+
+    return jsonify({"result": "success"})
+
+
 # post의 이미지를 불러올 때 img src="http://127.0.0.1:5000/img/{$figure_id}">
 # 형식으로 하시면 됩니다.
 # 서버로 하는 경우는, 주소를 서버로.
@@ -303,21 +359,19 @@ def send_default_image():
         return jsonify({"error": "Default image not found"}), 404
 
 
-
 @app.route("/addLikes", methods=["POST"])
 def addLikes():
 
-    user_id = request.form['user_id']
-    post_id = request.form['post_id']
-    likes = int(request.form['likesnum'])
+    user_id = request.form["user_id"]
+    post_id = request.form["post_id"]
+    likes = int(request.form["likesnum"])
 
-    print(f'')
-    print(f'user : {user_id} ,  post : {post_id} ,   likes : {likes} , ')
+    print(f"")
+    print(f"user : {user_id} ,  post : {post_id} ,   likes : {likes} , ")
 
-# post_id 로 게시글 찾아와서 좋아요 업데이트 하기 
+    # post_id 로 게시글 찾아와서 좋아요 업데이트 하기
     # try:
-    db.posts.update_one({'_id':ObjectId(post_id)},{'$set':{'likes':likes}})
-
+    db.posts.update_one({"_id": ObjectId(post_id)}, {"$set": {"likes": likes}})
 
     response = redirect(url_for("index"))
     return response
@@ -327,39 +381,41 @@ def addLikes():
 
 @app.route("/send_date/<dayoffset>")
 def send_date(dayoffset):
-    token = request.cookies.get('token')  # 토큰을 저장할때 쓴 키값
+    token = request.cookies.get("token")  # 토큰을 저장할때 쓴 키값
 
     try:
         print(f"Received dayoffset: {dayoffset}")
 
         # 변수 파일에서 현재 날짜를 로드
         variable = load_variable_from_file()
-        now_str = variable.get('currentdate', datetime.datetime.now())
+        now_str = variable.get("currentdate", datetime.datetime.now())
         now = datetime.datetime.strptime(now_str, "%Y-%m-%dT%H:%M:%S")
-        
-        if dayoffset == '1':
+
+        if dayoffset == "1":
             now = now + timedelta(days=1)
-        elif dayoffset == '-1':
+        elif dayoffset == "-1":
             now = now - timedelta(days=1)
         else:
             now = now
 
-        save_variable_to_file({'currentdate': now.strftime("%Y-%m-%dT%H:%M:%S")})
+        save_variable_to_file({"currentdate": now.strftime("%Y-%m-%dT%H:%M:%S")})
 
-        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         articledatas = updateFeedContents(now)
         return render_template(
-            "index.html", 
-            token=token, 
-            user_id=payload['user_id'], 
-            user_pw=payload['user_pw'], 
-            articledatas=articledatas, 
-            currentdate=now.strftime("%Y-%m-%d"))
+            "index.html",
+            token=token,
+            user_id=payload["user_id"],
+            user_pw=payload["user_pw"],
+            articledatas=articledatas,
+            currentdate=now.strftime("%Y-%m-%d"),
+        )
     except jwt.ExpiredSignatureError:
-        return '로그인이 만료되었습니다. 다시 로그인 해주세요'
+        return "로그인이 만료되었습니다. 다시 로그인 해주세요"
     except jwt.exceptions.DecodeError:
-        return '로그인 정보가 없습니다.'
-    
+        return "로그인 정보가 없습니다."
+
+
 if __name__ == "__main__":
     print(sys.executable)
     app.run("0.0.0.0", port=5001, debug=True)
