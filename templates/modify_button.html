@@ -297,7 +297,8 @@
             formData.append("title", changedTitle);
             formData.append("learned", changedLearned);
             formData.append("code", changedCode);
-            formData.append("user_id", "{{user_id}}")
+            formData.append("user_id", "{{user_id}}");
+            formData.append("post_id", target_id);
             
             $.ajax({
                 type: 'POST',
