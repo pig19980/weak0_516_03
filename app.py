@@ -227,7 +227,8 @@ def index():
             articledatas=updateFeedContents(now, "NEW"),
             yesterday = prev_day.strftime("%Y-%m-%d"),
             currentdate=now.strftime("%Y-%m-%d"),
-            NextDate = next_day.strftime("%Y-%m-%d")
+            NextDate = next_day.strftime("%Y-%m-%d"),
+            sortparap = "NEW"
         )
     # token이 만료 되었을때
     except jwt.ExpiredSignatureError:
@@ -312,33 +313,8 @@ def modify_article():
         db.posts.update_one(
             {"_id": ObjectId(post_id)}, {"$set": {"figure_id": figure_id}}
         )
-    try:
-        token = request.cookies.get("token")  # 토큰을 저장할때 쓴 키값
-
-        # 변수 파일에서 현재 날짜를 로드
-        variable = load_variable_from_file()
-        now_str = variable.get("currentdate", datetime.datetime.now())
-        now = datetime.datetime.strptime(now_str, "%Y-%m-%dT%H:%M:%S")
-
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        articledatas = updateFeedContents(now, "NONE")
-
-        return jsonify(
-            {
-                "result": render_template(
-                    "index.html",
-                    token=token,
-                    user_id=payload["user_id"],
-                    user_pw=payload["user_pw"],
-                    articledatas=articledatas,
-                    currentdate=now.strftime("%Y-%m-%d"),
-                )
-            }
-        )  # succes 대신에 rendertemplte하기
-    except jwt.ExpiredSignatureError:
-        return "로그인이 만료되었습니다. 다시 로그인 해주세요"
-    except jwt.exceptions.DecodeError:
-        return "로그인 정보가 없습니다."
+    
+    return jsonify({"result": "success"})
 
 
 # post의 이미지를 불러올 때 img src="http://127.0.0.1:5000/img/{$figure_id}">
@@ -395,44 +371,12 @@ def addLikes():
     # try:
     db.posts.update_one({"_id": ObjectId(post_id)}, {"$set": {"likes": likes}})
 
-    response = redirect(url_for("index"))
-
-    try:
-        response = redirect(url_for("index"))
-
-        token = request.cookies.get("token")  # 토큰을 저장할때 쓴 키값
-
-        # 변수 파일에서 현재 날짜를 로드
-        variable = load_variable_from_file()
-        now_str = variable.get("currentdate", datetime.datetime.now())
-        now = datetime.datetime.strptime(now_str, "%Y-%m-%d")
-
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        articledatas = updateFeedContents(now, "LIKES")
-
-        return jsonify(
-            {
-                "result": render_template(
-                    "index.html",
-                    token=token,
-                    user_id=payload["user_id"],
-                    user_pw=payload["user_pw"],
-                    articledatas=articledatas,
-                    currentdate=now.strftime("%Y-%m-%d"),
-                )
-            }
-        )  # succes 대신에 rendertemplte하기
-    except jwt.ExpiredSignatureError:
-        return "로그인이 만료되었습니다. 다시 로그인 해주세요"
-    except jwt.exceptions.DecodeError:
-        return "로그인 정보가 없습니다."
-
-    # except:
-    #     return jsonify({"error": "DB 수정실패"})
+    
+    return jsonify({"result": "success"})
 
 
-@app.route("/send_date/<today>")
-def send_date(today):
+@app.route("/send_date/<today>/<sortparam>")
+def send_date(today,sortparam):
     token = request.cookies.get("token")  # 토큰을 저장할때 쓴 키값
 
     try:
@@ -443,7 +387,7 @@ def send_date(today):
 
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
 
-        articledatas = updateFeedContents(now, "NONE")
+        articledatas = updateFeedContents(now, sortparam)
         return render_template(
             "index.html",
             token=token,
@@ -452,33 +396,8 @@ def send_date(today):
             articledatas=articledatas,
             yesterday = prev_day.strftime("%Y-%m-%d"),
             currentdate=now.strftime("%Y-%m-%d"),
-            tomorrow = next_day.strftime("%Y-%m-%d")
-        )
-    except jwt.ExpiredSignatureError:
-        return "로그인이 만료되었습니다. 다시 로그인 해주세요"
-    except jwt.exceptions.DecodeError:
-        return "로그인 정보가 없습니다."
-
-
-@app.route("/sorter/<sortparam>")
-def sort_articles(sortparam):
-    try:
-        token = request.cookies.get("token")  # 토큰을 저장할때 쓴 키값
-
-        # 변수 파일에서 현재 날짜를 로드
-        variable = load_variable_from_file()
-        now_str = variable.get("currentdate", datetime.datetime.now())
-        now = datetime.datetime.strptime(now_str, "%Y-%m-%dT%H:%M:%S")
-
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        articledatas = updateFeedContents(now, sortparam)
-        return render_template(
-            "index.html",
-            token=token,
-            user_id=payload["user_id"],
-            user_pw=payload["user_pw"],
-            articledatas=articledatas,
-            currentdate=now.strftime("%Y-%m-%d"),
+            tomorrow = next_day.strftime("%Y-%m-%d"),
+            sortparam = sortparam
         )
     except jwt.ExpiredSignatureError:
         return "로그인이 만료되었습니다. 다시 로그인 해주세요"
