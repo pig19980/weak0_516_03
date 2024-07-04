@@ -45,10 +45,13 @@
             flex-direction: column;
             align-items: center;
             /* 수평 중앙 정렬 */
+            background-color:#80AF81 ;
 
             margin-top: 10px;
         }
-
+        .token.number {
+            font-size: 16px;
+        }
 
         .date-group {
             display: flex;
@@ -149,11 +152,19 @@
         .floating-button:hover {
             background-color: #ff3f3f;
         }
+
+
+
+
     </style>
+
+
+
 
     <script>
 
-        function sendData(today,sortparam) {
+        function sendData(today, sortparam) {
+
             $.ajax({
                 type: "GET",
                 url: `/send_date/${today}/${sortparam}`,
@@ -162,11 +173,13 @@
                     document.open();
                     document.write(response);
                     document.close();
+
                 },
                 error: function (xhr) {
                     alert('An error occurred: ' + xhr.responseText);
                 }
             });
+            
         }
 
         function cancleUpload() {
@@ -266,7 +279,7 @@
                 contentType: false,
                 success: function (result) {
                     // alert("좋아요 업데이트 완료");
-                    sendData('{{currentdate}}','{{sortparam}}')
+                    sendData('{{currentdate}}', '{{sortparam}}')
                 },
                 error: function (error) {
                     console.error('좋아요 업데이트 에러:', error);
@@ -321,7 +334,7 @@
                 processData: false,
                 contentType: false,
                 success: function (result) {
-                    sendData('{{currentdate}}','{{sortparam}}');
+                    sendData('{{currentdate}}', '{{sortparam}}');
                 },
                 error: function (xhr, ajaxSetting, thrownError) {
                     alert("업로드 실패");
@@ -387,7 +400,7 @@
 
     <div class="columns">
         <!-- title -->
-        <div id="title-group" class="column has-background-grey-light">
+        <div id="title-group" class="column">
             <h1 class="title is-3">오늘 하루 어땠니 ?</h1>
 
             <div class="date-group">
@@ -404,8 +417,10 @@
         <!-- feed -->
         <div class="column is-6">
             <div class="buttongroup" style="margin-bottom: 50px; margin-top: 10px;">
-                <button class="button is-small is-link is-rounded" onclick="sendData('{{currentdate}}','NEW')">최신순</button>
-                <button class="button is-small is-primary is-rounded" onclick="sendData('{{currentdate}}','LIKES')">인기순</button>
+                <button class="button is-small is-rounded" id="new-btn"
+                    onclick="sendData('{{currentdate}}','NEW')">최신순</button>
+                <button class="button is-small is-rounded" id="like-btn"
+                    onclick="sendData('{{currentdate}}','LIKES')">인기순</button>
                 <button class="js-modal-trigger button is-white is-pulled-right" data-target="modal-js-writing">
                     <i class="fa-solid fa-circle-plus"></i>
                 </button>
@@ -526,7 +541,7 @@
 
 
         <!-- blank -->
-        <div class="column has-background-grey-light">
+        <div class="column" id="title-group">
             <button class="floating-button" onclick="logout()">
                 <i class="fas fa-sign-out-alt"></i>
             </button>
@@ -553,6 +568,18 @@
             });
         });
     </script>
+
+    {% if (sortparam == 'LIKES') %}
+    <script>
+        $("#new-btn").addClass("is-primary");
+        $("#like-btn").addClass("is-link");
+    </script>
+    {% else  %}
+    <script>
+        $("#new-btn").addClass("is-link");
+        $("#like-btn").addClass("is-primary");
+    </script>
+    {% endif %}
 
     <script src="{{ url_for('static', filename='addEventListener.js') }}"></script>
 </body>
