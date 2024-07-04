@@ -228,8 +228,8 @@ def index():
             articledatas=updateFeedContents(now, "NEW"),
             yesterday = prev_day.strftime("%Y-%m-%d"),
             currentdate=now.strftime("%Y-%m-%d"),
-            NextDate = next_day.strftime("%Y-%m-%d"),
-            sortparap = "NEW"
+            tomorrow = next_day.strftime("%Y-%m-%d"),
+            sortparam = "NEW"
         )
     # token이 만료 되었을때
     except jwt.ExpiredSignatureError:
