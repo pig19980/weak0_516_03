@@ -20,6 +20,5 @@
 *.gz
 *.md
 *.pyi
-*.png
 *.css
 variable.json
