@@ -153,10 +153,10 @@
 
     <script>
 
-        function sendData(dayoffset) {
+        function sendData(today,sortparam) {
             $.ajax({
                 type: "GET",
-                url: `/send_date/${dayoffset}`,
+                url: `/send_date/${today}/${sortparam}`,
                 success: function (response) {
                     // 응답으로 받은 HTML을 전체 문서로 대체
                     document.open();
@@ -167,22 +167,6 @@
                     alert('An error occurred: ' + xhr.responseText);
                 }
             });
-        }
-
-        function sorterArticle(sortparam) {
-            $.ajax({
-                type: "GET",
-                url: `/sorter/${sortparam}`,
-                success: function (response) {
-                    // 응답으로 받은 HTML을 전체 문서로 대체
-                    document.open();
-                    document.write(response);
-                    document.close();
-                },
-                error: function (xht) {
-                    alert('An error occurred: ' + xhr.responseText)
-                }
-            })
         }
 
         function cancleUpload() {
@@ -282,9 +266,7 @@
                 contentType: false,
                 success: function (result) {
                     // alert("좋아요 업데이트 완료");
-                    document.open();
-                    document.write(result["result"]);
-                    document.close();
+                    sendData('{{currentdate}}','{{sortparam}}')
                 },
                 error: function (error) {
                     console.error('좋아요 업데이트 에러:', error);
@@ -339,10 +321,7 @@
                 processData: false,
                 contentType: false,
                 success: function (result) {
-                    document.open();
-                    document.write(result["result"]);
-                    document.close();
-
+                    sendData('{{currentdate}}','{{sortparam}}');
                 },
                 error: function (xhr, ajaxSetting, thrownError) {
                     alert("업로드 실패");
@@ -413,20 +392,20 @@
 
             <div class="date-group">
                 <span class="icon">
-                    <button class="fa-solid fa-caret-up" onclick="sendData('-1') "></button>
+                    <button class="fa-solid fa-caret-up" onclick="sendData('{{yesterday}}') "></button>
                 </span>
                 <h3 id="current_date" class="subtitle is-3" style="margin-bottom: 0px;">{{currentdate}}
                 </h3>
                 <span class="icon">
-                    <button class="fa-solid fa-caret-down" onclick="sendData('1') "></button>
+                    <button class="fa-solid fa-caret-down" onclick="sendData('{{tomorrow}}') "></button>
                 </span>
             </div>
         </div>
         <!-- feed -->
         <div class="column is-6">
             <div class="buttongroup" style="margin-bottom: 50px; margin-top: 10px;">
-                <button class="button is-small is-link is-rounded" onclick="sorterArticle('NEW')">최신순</button>
-                <button class="button is-small is-primary is-rounded" onclick="sorterArticle('LIKES')">인기순</button>
+                <button class="button is-small is-link is-rounded" onclick="sendData('{{currentdate}}','NEW')">최신순</button>
+                <button class="button is-small is-primary is-rounded" onclick="sendData('{{currentdate}}','LIKES')">인기순</button>
                 <button class="js-modal-trigger button is-white is-pulled-right" data-target="modal-js-writing">
                     <i class="fa-solid fa-circle-plus"></i>
                 </button>
