@@ -17,8 +17,8 @@ from datetime import timedelta
 app = Flask(__name__)
 SECRET_KEY = "jungle_3"  # 토큰을 암호화할 key 세팅
 # db connection
-client = MongoClient("mongodb://test:test@54.180.237.110/?authSource=admin", 27017)
-# client = MongoClient('localhost', 27017)
+# client = MongoClient("mongodb://test:test@54.180.237.110/?authSource=admin", 27017)
+client = MongoClient('localhost', 27017)
 db = client.dbjungle
 fs = gridfs.GridFS(db)
 
@@ -177,6 +177,8 @@ def insert_user_data():
 # 유저 로그인 체크
 @app.route("/login/logincheck", methods=["POST"])
 def logincheck():
+    import time
+    times = 30 * 60
     # 1. 클라이언트로부터 데이터를 받기
     uid_receive = request.form["user_id"]  # 클라이언트로부터 user_id을 받는 부분
     upw_receive = request.form["user_pw"]  # 클라이언트로부터 user_pw을 받는 부분
@@ -199,9 +201,13 @@ def logincheck():
             "user_id": user_data["user_id"],
             "user_pw": user_data["user_pw"],
             "user_name": check["user_name"],
+            "exp":datetime.datetime.utcnow() + datetime.timedelta(seconds=times), 
+            # encoding 후 exp 시간이 지나야 토큰이 만료되는데 지금 이 경우는 encoding 후 바로 redirect를 진행하기 때문에
+            # 토큰 만료가 되지 않고 로그인이 된다. 이후 /index를 리로딩할 시 , 토큰 만료 시간을 따지게 된다.
         }
         # 토큰을 발급한다.
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+        # time.sleep(times+1)
         response = redirect(url_for("index"))
         response.set_cookie("token", token)
         return response
@@ -408,5 +414,5 @@ def send_date(today,sortparam):
 
 if __name__ == "__main__":
     print(sys.executable)
-    app.run("0.0.0.0", port=5000, debug=True)
-    # app.run("0.0.0.0", port=5001, debug=True)
+    # app.run("0.0.0.0", port=5000, debug=True)
+    app.run("0.0.0.0", port=5001, debug=True)
